@@ -35,5 +35,5 @@ export default defineConfig({
   server: {
     port: 3000
   },
-  base: "https://asura-codes.github.io/ts-vuetify3-baklavajs-blocks-vm/block-proc/dist/"
+  base: "/ts-vuetify3-baklavajs-blocks-vm/block-proc/dist/"
 })
