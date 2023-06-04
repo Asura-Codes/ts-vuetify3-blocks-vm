@@ -35,5 +35,5 @@ export default defineConfig({
   server: {
     port: 3000
   },
-  base: "/ts-vuetify3-baklavajs-blocks-vm/block-proc/"
+  base: "/ts-vuetify3-baklavajs-blocks-vm/"
 })

@@ -6,7 +6,7 @@
 
 Generating byte code from nodes editor (mainly: in, out, math and logic). *EARLY STAGE*
 
-https://asura-codes.github.io/ts-vuetify3-baklavajs-blocks-vm/block-proc/
+https://asura-codes.github.io/ts-vuetify3-baklavajs-blocks-vm/
 
 ### vm-emscripten
 
