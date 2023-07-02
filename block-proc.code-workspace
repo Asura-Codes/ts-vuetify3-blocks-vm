@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "block-proc"
+		},
+		{
+			"path": "vm-emscripten"
+		}
+	],
+	"settings": {
+		"powershell.cwd": "f:\\Workspace\\workspaceVScode2023\\ts-vuetify3-baklavajs-blocks-vm\\vm-emscripten",
+		"files.associations": {
+			"emscripten.h": "c",
+			"simple-vm.h": "c",
+			"future": "c",
+			"system_error": "c",
+			"array": "c",
+			"bitset": "c",
+			"deque": "c",
+			"initializer_list": "c",
+			"list": "c",
+			"type_traits": "c",
+			"vector": "c",
+			"xhash": "c",
+			"xstring": "c",
+			"xtree": "c",
+			"xutility": "c",
+			"vm-ops.h": "c",
+			"vm.h": "c"
+		}
+	}
+}

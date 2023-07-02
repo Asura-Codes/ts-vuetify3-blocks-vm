@@ -57,7 +57,7 @@
 </template>
 
 <script lang="ts">
-import events from '../plugins/events';
+import events from '@/plugins/events';
 
 export default {
     data: () => ({

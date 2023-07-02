@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "vm-emscripten"
+		},
+		{
+			"path": "block-proc"
+		}
+	],
+	"settings": {}
+}

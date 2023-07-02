@@ -1,6 +1,8 @@
 // Plugins
 import vue from '@vitejs/plugin-vue'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -20,7 +22,8 @@ export default defineConfig({
   define: { 'process.env': {} },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@lib': fileURLToPath(new URL('./src/lib', import.meta.url))
     },
     extensions: [
       '.js',
@@ -35,5 +38,5 @@ export default defineConfig({
   server: {
     port: 3000
   },
-  base: "/ts-vuetify3-baklavajs-blocks-vm/"
+  // base: "/ts-vuetify3-baklavajs-blocks-vm/"
 })
