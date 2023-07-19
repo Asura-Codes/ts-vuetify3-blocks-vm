@@ -90,7 +90,7 @@ async function compileFromFile(file: string) {
 
                             // Data and registers
                             rest.forEach(e => {
-                                if (e.reg) {
+                                if (e.reg != undefined) {
                                     out.writeCmd(e.reg);
                                 } else if (e.label) {
                                     GOTOS.set(out.d.offset, e.label);

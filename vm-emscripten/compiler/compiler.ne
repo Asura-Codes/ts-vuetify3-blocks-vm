@@ -54,7 +54,8 @@ jline   ->
 
 cmd     -> "store"i _ address _ "," _ string                      {% function(d) { d[0] = STRING_STORE; return d.filter(e => e !== null && e !== ','); } %}
          | "store"i _ address _ ","  _ int                        {% function(d) { d[0] = INT_STORE; return d.filter(e => e !== null && e !== ','); } %}
-         | "store"i _ address _ ","  _ label                      {% function(d) { d[0] = REG_STORE; return d.filter(e => e !== null && e !== ','); } %}
+         | "store"i _ address _ ","  _ label                      {% function(d) { d[0] = INT_STORE; return d.filter(e => e !== null && e !== ','); } %}
+         | "store"i _ address _ ","  _ address                    {% function(d) { d[0] = REG_STORE; return d.filter(e => e !== null && e !== ','); } %}
          | "exit"i                                                {% function(d) { d[0] = EXIT; return d.filter(e => e !== null); } %}
          | "nop"i                                                 {% function(d) { d[0] = NOP_OP; return d.filter(e => e !== null); } %}
          | "print_int"i _ address                                 {% function(d) { d[0] = INT_PRINT; return d.filter(e => e !== null); } %}
@@ -95,4 +96,4 @@ comment -> null
 string  -> dqstring             {% function(d) { return d[0]; } %}
 address -> "#" unsigned_int     {% function(d) { return { reg: d[1] }; } %}
 label   -> [a-zA-Z] [^\\"\n ]:* {% function(d) { return { label: d[0] + d[1].join('') }; } %}
-         | "0x"i [a-fA-F0-9]:*  {% function(d) { return parseInt(d[1].join('')); } %}
+         | "0x"i [a-fA-F0-9]:*  {% function(d) { return parseInt(d[1].join(''), 16); } %}
