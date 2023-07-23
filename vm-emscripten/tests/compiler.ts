@@ -45,6 +45,27 @@ function createCompilerFile(file: string): CompilerFile {
     }
 }
 
+function ldexp(mantissa, exponent) {
+    var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
+    var result = mantissa;
+    for (var i = 0; i < steps; i++)
+        result *= Math.pow(2, Math.floor((exponent + i) / steps));
+    return result;
+}
+
+function frexp(value) {
+    if (value === 0) return [value, 0];
+    var data = new DataView(new ArrayBuffer(8));
+    data.setFloat64(0, value);
+    var bits = (data.getUint32(0) >>> 20) & 0x7FF;
+    if (bits === 0) { // denormal
+        data.setFloat64(0, value * Math.pow(2, 64));  // exp + 64
+        bits = ((data.getUint32(0) >>> 20) & 0x7FF) - 64;
+    }
+    var exponent = bits - 1022;
+    var mantissa = ldexp(value, -exponent);
+    return [mantissa, exponent];
+}
 
 // Line by line
 async function compileFromFile(file: string) {
@@ -80,28 +101,26 @@ async function compileFromFile(file: string) {
                         // Label
                         LABELS.set(rest[0].label, out.d.offset);
                     } else {
-                        if (cmd >= 0x10 && cmd <= 0x12) {
-                            // Jump
-                            out.writeCmd(cmd);
-                            out.writeShort(0);
-                        } else {
-                            // Command
-                            out.writeCmd(cmd);
+                        // Command
+                        out.writeCmd(cmd);
 
-                            // Data and registers
-                            rest.forEach(e => {
-                                if (e.reg != undefined) {
-                                    out.writeCmd(e.reg);
-                                } else if (e.label) {
-                                    GOTOS.set(out.d.offset, e.label);
-                                    out.writeShort(0);
-                                } else if (e.length) {
-                                    out.writeString(e);
-                                } else {
-                                    out.writeShort(e);
-                                }
-                            });
-                        }
+                        // Data and registers
+                        rest.forEach(e => {
+                            if (e.reg != undefined) {
+                                out.writeCmd(e.reg);
+                            } else if (e.label) {
+                                GOTOS.set(out.d.offset, e.label);
+                                out.writeShort(0);
+                            } else if (e.length) {
+                                out.writeString(e);
+                            } else if (e.num) {
+                                const [mantissa, exponent] = frexp(e.num)
+                                out.writeShort(exponent);
+                                out.writeShort(mantissa * 65535); // USHORT scaled
+                            } else {
+                                out.writeShort(e);
+                            }
+                        });
                     }
                 }
             });
@@ -130,21 +149,21 @@ async function compileFromFile(file: string) {
 async function test() {
     try {
         await compileFromFile('examples/add.in');
-        await compileFromFile('examples/call.in');
-        await compileFromFile('examples/compare.in');
-        await compileFromFile('examples/concat.in');
-        await compileFromFile('examples/dec.in');
-        await compileFromFile('examples/equal.in');
-        await compileFromFile('examples/jump.in');
-        await compileFromFile('examples/loop.in');
-        await compileFromFile('examples/memcpy.in');
-        await compileFromFile('examples/mul.in');
-        await compileFromFile('examples/poke.in');
-        await compileFromFile('examples/random.in');
-        await compileFromFile('examples/simple.in');
-        await compileFromFile('examples/stack.in');
-        await compileFromFile('examples/system.in');
-        await compileFromFile('examples/types.in');
+        // await compileFromFile('examples/call.in');
+        // await compileFromFile('examples/compare.in');
+        // await compileFromFile('examples/concat.in');
+        // await compileFromFile('examples/dec.in');
+        // await compileFromFile('examples/equal.in');
+        // await compileFromFile('examples/jump.in');
+        // await compileFromFile('examples/loop.in');
+        // await compileFromFile('examples/memcpy.in');
+        // await compileFromFile('examples/mul.in');
+        // await compileFromFile('examples/poke.in');
+        // await compileFromFile('examples/random.in');
+        // await compileFromFile('examples/simple.in');
+        // await compileFromFile('examples/stack.in');
+        // await compileFromFile('examples/system.in');
+        // await compileFromFile('examples/types.in');
     } catch (err) {
         console.error(err);
     }

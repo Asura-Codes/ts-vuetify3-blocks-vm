@@ -9,6 +9,9 @@ const INT_STORE = 0x01;
 const INT_PRINT = 0x02;
 const INT_TOSTRING = 0x03;
 const INT_RANDOM = 0x04;
+const FLOAT_STORE = 0x05;
+const FLOAT_PRINT = 0x06;
+const FLOAT_TOSTRING = 0x07;
 const JUMP_TO = 0x10;
 const JUMP_Z = 0x11;
 const JUMP_NZ = 0x12;
@@ -56,10 +59,12 @@ cmd     -> "store"i _ address _ "," _ string                      {% function(d)
          | "store"i _ address _ ","  _ int                        {% function(d) { d[0] = INT_STORE; return d.filter(e => e !== null && e !== ','); } %}
          | "store"i _ address _ ","  _ label                      {% function(d) { d[0] = INT_STORE; return d.filter(e => e !== null && e !== ','); } %}
          | "store"i _ address _ ","  _ address                    {% function(d) { d[0] = REG_STORE; return d.filter(e => e !== null && e !== ','); } %}
+         | "store"i _ address _ ","  _ number                     {% function(d) { d[0] = FLOAT_STORE; return d.filter(e => e !== null && e !== ','); } %}
          | "exit"i                                                {% function(d) { d[0] = EXIT; return d.filter(e => e !== null); } %}
          | "nop"i                                                 {% function(d) { d[0] = NOP_OP; return d.filter(e => e !== null); } %}
          | "print_int"i _ address                                 {% function(d) { d[0] = INT_PRINT; return d.filter(e => e !== null); } %}
          | "print_str"i _ address                                 {% function(d) { d[0] = STRING_PRINT; return d.filter(e => e !== null); } %}
+         | "print_num"i _ address                                 {% function(d) { d[0] = FLOAT_PRINT; return d.filter(e => e !== null); } %}
          | "system"i _ address                                    {% function(d) { d[0] = STRING_SYSTEM; return d.filter(e => e !== null); } %}
          | "goto"i _ label                                        {% function(d) { d[0] = JUMP_TO; return d.filter(e => e !== null); } %}
          | "jmp"i _ label                                         {% function(d) { d[0] = JUMP_TO; return d.filter(e => e !== null); } %}
@@ -77,6 +82,7 @@ cmd     -> "store"i _ address _ "," _ string                      {% function(d)
          | "dec"i _ address                                       {% function(d) { d[0] = DEC_OP; return d.filter(e => e !== null); } %}
          | "inc"i _ address                                       {% function(d) { d[0] = INC_OP; return d.filter(e => e !== null); } %}
          | "int2string"i _ address                                {% function(d) { d[0] = INT_TOSTRING; return d.filter(e => e !== null); } %}
+         | "num2string"i _ address                                {% function(d) { d[0] = FLOAT_TOSTRING; return d.filter(e => e !== null); } %}
          | "random"i _ address                                    {% function(d) { d[0] = INT_RANDOM; return d.filter(e => e !== null); } %}
          | "string2int"i _ address                                {% function(d) { d[0] = STRING_TOINT; return d.filter(e => e !== null); } %}
          | "cmp"i _ address _ ","  _ address                      {% function(d) { d[0] = CMP_REG; return d.filter(e => e !== null && e !== ','); } %}
@@ -97,3 +103,4 @@ string  -> dqstring             {% function(d) { return d[0]; } %}
 address -> "#" unsigned_int     {% function(d) { return { reg: d[1] }; } %}
 label   -> [a-zA-Z] [^\\"\n ]:* {% function(d) { return { label: d[0] + d[1].join('') }; } %}
          | "0x"i [a-fA-F0-9]:*  {% function(d) { return parseInt(d[1].join(''), 16); } %}
+number -> decimal               {% function(d) { return { num: d[0] }; } %}
