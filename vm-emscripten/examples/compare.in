@@ -4,12 +4,6 @@
 #  This program compares the number in a register with a constant.
 #
 #
-# Usage
-#
-#  $ compiler ./compare.in ; ./simple-vm ./compare.raw
-#
-#
-#
 
         store #1, 44
         cmp #1, 44

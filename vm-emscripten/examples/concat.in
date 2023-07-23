@@ -4,12 +4,6 @@
 #  Use a conditional jump to loop ten times, building up a string as we go.
 #
 #
-# Usage
-#
-#  $ compiler ./concat.in ; ./simple-vm ./concat.raw
-#
-#
-#
 
         store #1, "Counting bananas"
         print_str #1
