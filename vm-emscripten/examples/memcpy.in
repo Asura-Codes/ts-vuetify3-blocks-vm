@@ -4,12 +4,6 @@
 #  This program copies a bunch of memory about, then jumps to it.
 #
 #
-# Usage
-#
-#  $ compiler ./memcpy.in ; ./simple-vm ./memcpy.raw
-#
-#
-#
 
         goto run
     :code

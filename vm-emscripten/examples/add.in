@@ -4,12 +4,6 @@
 #  This program adds two numbers.
 #
 #
-# Usage
-#
-#  $ compiler ./add.in ; ./simple-vm ./add.raw
-#
-#
-#
 
         store #1, 10.0
         store #2, 20.0

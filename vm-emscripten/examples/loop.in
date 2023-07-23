@@ -5,12 +5,6 @@
 # if a "SUB" operation results in <0.
 #
 #
-# Usage
-#
-#  $ compiler ./loop.in ; ./simple-vm ./loop.raw
-#
-#
-#
 
         store #1, "Counting from ten to zero\n"
         print_str #1

@@ -4,12 +4,6 @@
 #  This program decrements an integer.
 #
 #
-# Usage
-#
-#  $ compiler ./dec.in ; ./simple-vm ./dec.raw
-#
-#
-#
 
         store #1, 3
         store #0, "Stored in register #1 -> 3\n"

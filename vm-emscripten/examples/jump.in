@@ -6,12 +6,6 @@
 #  However it does prove that the goto/label handling is correct.
 #
 #
-# Usage
-#
-#  $ compiler ./jump.in ; ./simple-vm ./jump.raw
-#
-#
-#
 
         store #1, "Steve Kemp\n"
         print_str #1

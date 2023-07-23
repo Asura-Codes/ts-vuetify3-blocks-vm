@@ -4,12 +4,6 @@
 #  Show some opcodes in RAM, then execute them.
 #
 #
-# Usage
-#
-#  $ compiler ./poke.in ; ./simple-vm ./poke.raw
-#
-#
-#
 
         #
         # Set the byte at 0x5000 to read "NOP"

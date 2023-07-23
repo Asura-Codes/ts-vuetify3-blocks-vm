@@ -4,12 +4,6 @@
 #  This program demonstrates that the stack can be used to store integers.
 #
 #
-# Usage
-#
-#  $ compiler ./stack.in ; ./simple-vm ./stack.raw
-#
-#
-#
 
         #
         # Store an integer, then push to the stack.

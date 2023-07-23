@@ -4,12 +4,6 @@
 #  This program tests our comparision operation.
 #
 #
-# Usage
-#
-#  $ compiler ./equal.in ; ./simple-vm ./equal.raw
-#
-#
-#
 
         store #1, 20
         store #2, 30

@@ -4,12 +4,6 @@
 #  This program multiples and divides two numbers.
 #
 #
-# Usage
-#
-#  $ compiler ./mul.in ; ./simple-vm ./mul.raw
-#
-#
-#
 
         store #1, 10
         store #2, 20

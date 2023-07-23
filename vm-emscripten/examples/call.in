@@ -4,12 +4,6 @@
 #  This program demonstrates that we can use subroutines.
 #
 #
-# Usage
-#
-#  $ compiler ./call.in ; ./simple-vm ./call.raw
-#
-#
-#
         store #1, 15
         call print
 

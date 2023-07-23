@@ -4,12 +4,6 @@
 #  Output ten random integers.
 #
 #
-# Usage
-#
-#  $ compiler ./random.in ; ./simple-vm ./random.raw
-#
-#
-#
 
         store #1, "Generating ten random integers\n"
         print_str #1

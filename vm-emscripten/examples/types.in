@@ -4,12 +4,6 @@
 #  This program tests our type-handling - which is basic.
 #
 #
-# Usage
-#
-#  $ compiler ./types.in ; ./simple-vm ./types.raw
-#
-#
-#
 
         store #1, 43
         is_integer #1
