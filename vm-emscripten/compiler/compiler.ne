@@ -103,4 +103,12 @@ string  -> dqstring             {% function(d) { return d[0]; } %}
 address -> "#" unsigned_int     {% function(d) { return { reg: d[1] }; } %}
 label   -> [a-zA-Z] [^\\"\n ]:* {% function(d) { return { label: d[0] + d[1].join('') }; } %}
          | "0x"i [a-fA-F0-9]:*  {% function(d) { return parseInt(d[1].join(''), 16); } %}
-number -> decimal               {% function(d) { return { num: d[0] }; } %}
+number -> "-":? [0-9]:+ "." [0-9]:+ {%
+    function(d) {
+        return parseFloat(
+            (d[0] || "") +
+            d[1].join("") + d[2] +
+            d[3].join("")
+        );
+    }
+%}

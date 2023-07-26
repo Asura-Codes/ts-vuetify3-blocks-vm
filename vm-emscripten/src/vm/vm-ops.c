@@ -33,15 +33,15 @@
     void function(struct svm *svm)                                                                       \
     {                                                                                                    \
         /* get the destination register */                                                               \
-        uint32_t reg = next_byte(svm);                                                               \
+        uint32_t reg = next_byte(svm);                                                                   \
         BOUNDS_TEST_REGISTER(reg);                                                                       \
                                                                                                          \
         /* get the source register */                                                                    \
-        uint32_t src1 = next_byte(svm);                                                              \
+        uint32_t src1 = next_byte(svm);                                                                  \
         BOUNDS_TEST_REGISTER(reg);                                                                       \
                                                                                                          \
         /* get the source register */                                                                    \
-        uint32_t src2 = next_byte(svm);                                                              \
+        uint32_t src2 = next_byte(svm);                                                                  \
         BOUNDS_TEST_REGISTER(reg);                                                                       \
                                                                                                          \
         if (getenv("DEBUG") != NULL)                                                                     \
@@ -757,7 +757,6 @@ void op_jump_nz(struct svm *svm)
     }
 }
 
-
 void reg_add(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
 {
     if (svm->registers[lhs].type == FLOAT || svm->registers[rhs].type == FLOAT)
@@ -769,7 +768,7 @@ void reg_add(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
     else
     {
         svm->registers[out].type = INTEGER;
-        svm->registers[out].content.number = get_int_reg(svm, lhs) + get_int_reg(svm, rhs);
+        svm->registers[out].content.integer = get_int_reg(svm, lhs) + get_int_reg(svm, rhs);
     }
 }
 
@@ -783,7 +782,7 @@ void reg_and(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
     else
     {
         svm->registers[out].type = INTEGER;
-        svm->registers[out].content.number = get_int_reg(svm, lhs) & get_int_reg(svm, rhs);
+        svm->registers[out].content.integer = get_int_reg(svm, lhs) & get_int_reg(svm, rhs);
     }
 }
 
@@ -798,7 +797,7 @@ void reg_sub(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
     else
     {
         svm->registers[out].type = INTEGER;
-        svm->registers[out].content.number = get_int_reg(svm, lhs) - get_int_reg(svm, rhs);
+        svm->registers[out].content.integer = get_int_reg(svm, lhs) - get_int_reg(svm, rhs);
     }
 }
 
@@ -813,7 +812,7 @@ void reg_mul(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
     else
     {
         svm->registers[out].type = INTEGER;
-        svm->registers[out].content.number = get_int_reg(svm, lhs) * get_int_reg(svm, rhs);
+        svm->registers[out].content.integer = get_int_reg(svm, lhs) * get_int_reg(svm, rhs);
     }
 }
 
@@ -827,7 +826,7 @@ void reg_xor(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
     else
     {
         svm->registers[out].type = INTEGER;
-        svm->registers[out].content.number = get_int_reg(svm, lhs) ^ get_int_reg(svm, rhs);
+        svm->registers[out].content.integer = get_int_reg(svm, lhs) ^ get_int_reg(svm, rhs);
     }
 }
 
@@ -841,7 +840,7 @@ void reg_or(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
     else
     {
         svm->registers[out].type = INTEGER;
-        svm->registers[out].content.number = get_int_reg(svm, lhs) | get_int_reg(svm, rhs);
+        svm->registers[out].content.integer = get_int_reg(svm, lhs) | get_int_reg(svm, rhs);
     }
 }
 
@@ -1182,10 +1181,22 @@ void op_stack_push(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     /* Get the value we're to store. */
-    int val = get_int_reg(svm, reg);
+    struct reg_t val = svm->registers[reg];
+    if (svm->registers[reg].type == STRING)
+    {
+        val.content.string = strdup(svm->registers[reg].content.string);
+    }
+    // int val = get_int_reg(svm, reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("PUSH(Register %d [=%04x])\n", reg, val);
+    {
+        if (svm->registers[reg].type == INTEGER)
+            printf("PUSH(Register %d [=%04x])\n", reg, val.content.integer);
+        if (svm->registers[reg].type == FLOAT)
+            printf("PUSH(Register %d [=%04f])\n", reg, val.content.number);
+        if (svm->registers[reg].type == STRING)
+            printf("PUSH(Register %d [=%s])\n", reg, val.content.string);
+    }
 
     /* store it */
     svm->SP += 1;
@@ -1216,18 +1227,24 @@ void op_stack_pop(struct svm *svm)
         svm_default_error_handler(svm, "stack overflow - stack is empty");
 
     /* Get the value from the stack. */
-    int val = svm->stack[svm->SP];
+    struct reg_t val = svm->stack[svm->SP];
     svm->SP -= 1;
 
     if (getenv("DEBUG") != NULL)
-        printf("POP(Register %d) => %04x\n", reg, val);
+    {
+        if (svm->registers[reg].type == INTEGER)
+            printf("POP(Register %d [=%04x])\n", reg, val.content.integer);
+        if (svm->registers[reg].type == FLOAT)
+            printf("POP(Register %d [=%04f])\n", reg, val.content.number);
+        if (svm->registers[reg].type == STRING)
+            printf("POP(Register %d [=%s])\n", reg, val.content.string);
+    }
 
     /* if the register stores a string .. free it */
     if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
         free(svm->registers[reg].content.string);
 
-    svm->registers[reg].content.integer = val;
-    svm->registers[reg].type = INTEGER;
+    svm->registers[reg] = val;
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -1244,14 +1261,22 @@ void op_stack_ret(struct svm *svm)
         svm_default_error_handler(svm, "stack overflow - stack is empty");
 
     /* Get the value from the stack. */
-    int val = svm->stack[svm->SP];
+    struct reg_t val = svm->stack[svm->SP];
     svm->SP -= 1;
 
     if (getenv("DEBUG") != NULL)
-        printf("RET() => %04x\n", val);
+    {
+        if (val.type == INTEGER)
+            printf("RET() => %04x\n", val.content.integer);
+        if (val.type == FLOAT)
+            printf("RET() ERROR => %04f\n", val.content.number);
+        if (val.type == STRING)
+            printf("RET() ERROR => %s\n", val.content.string);
+    }
 
     /* update our instruction pointer. */
-    svm->ip = val;
+    if (val.type == INTEGER)
+        svm->ip = val.content.integer;
 }
 
 /**
@@ -1281,7 +1306,10 @@ void op_stack_call(struct svm *svm)
      * on the stack so that the "ret(urn)" instruction will go
      * to the correct place.
      */
-    svm->stack[svm->SP] = svm->ip + 1;
+    struct reg_t val;
+    val.type = INTEGER;
+    val.content.integer = svm->ip + 1;
+    svm->stack[svm->SP] = val;
 
     /**
      * Now we've saved the return-address we can update the IP

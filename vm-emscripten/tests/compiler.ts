@@ -149,21 +149,20 @@ async function compileFromFile(file: string) {
 async function test() {
     try {
         await compileFromFile('examples/add.in');
-        // await compileFromFile('examples/call.in');
-        // await compileFromFile('examples/compare.in');
-        // await compileFromFile('examples/concat.in');
-        // await compileFromFile('examples/dec.in');
-        // await compileFromFile('examples/equal.in');
-        // await compileFromFile('examples/jump.in');
-        // await compileFromFile('examples/loop.in');
-        // await compileFromFile('examples/memcpy.in');
-        // await compileFromFile('examples/mul.in');
-        // await compileFromFile('examples/poke.in');
-        // await compileFromFile('examples/random.in');
-        // await compileFromFile('examples/simple.in');
-        // await compileFromFile('examples/stack.in');
-        // await compileFromFile('examples/system.in');
-        // await compileFromFile('examples/types.in');
+        await compileFromFile('examples/call.in');
+        await compileFromFile('examples/compare.in');
+        await compileFromFile('examples/concat.in');
+        await compileFromFile('examples/dec.in');
+        await compileFromFile('examples/equal.in');
+        await compileFromFile('examples/jump.in');
+        await compileFromFile('examples/loop.in');
+        await compileFromFile('examples/memcpy.in');
+        await compileFromFile('examples/mul.in');
+        await compileFromFile('examples/poke.in');
+        await compileFromFile('examples/random.in');
+        await compileFromFile('examples/stack.in');
+        await compileFromFile('examples/system.in');
+        await compileFromFile('examples/types.in');
     } catch (err) {
         console.error(err);
     }

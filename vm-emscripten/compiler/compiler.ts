@@ -293,7 +293,21 @@ const grammar: Grammar = {
     {"name": "label$ebnf$2", "symbols": []},
     {"name": "label$ebnf$2", "symbols": ["label$ebnf$2", /[a-fA-F0-9]/], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "label", "symbols": ["label$subexpression$1", "label$ebnf$2"], "postprocess": function(d) { return parseInt(d[1].join(''), 16); }},
-    {"name": "number", "symbols": ["decimal"], "postprocess": function(d) { return { num: d[0] }; }}
+    {"name": "number$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "number$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "number$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "number$ebnf$2", "symbols": ["number$ebnf$2", /[0-9]/], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "number$ebnf$3", "symbols": [/[0-9]/]},
+    {"name": "number$ebnf$3", "symbols": ["number$ebnf$3", /[0-9]/], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "number", "symbols": ["number$ebnf$1", "number$ebnf$2", {"literal":"."}, "number$ebnf$3"], "postprocess": 
+        function(d) {
+            return parseFloat(
+                (d[0] || "") +
+                d[1].join("") + d[2] +
+                d[3].join("")
+            );
+        }
+        }
   ],
   ParserStart: "main",
 };

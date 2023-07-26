@@ -107,6 +107,7 @@ enum opcode_t
  * Count of registers.
  */
 #define REGISTER_COUNT 10
+#define STACK_COUNT 512
 
 
 /**
@@ -186,7 +187,7 @@ typedef struct svm {
      * This is the stack for the virtual machine.  There are
      * only a small number of entries permitted.
      */
-    int stack[1024];
+    struct reg_t stack[STACK_COUNT];
 
     /**
      * The stack pointer which starts from zero and grows upwards.
