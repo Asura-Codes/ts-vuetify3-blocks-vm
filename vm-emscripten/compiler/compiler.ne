@@ -105,10 +105,12 @@ label   -> [a-zA-Z] [^\\"\n ]:* {% function(d) { return { label: d[0] + d[1].joi
          | "0x"i [a-fA-F0-9]:*  {% function(d) { return parseInt(d[1].join(''), 16); } %}
 number -> "-":? [0-9]:+ "." [0-9]:+ {%
     function(d) {
-        return parseFloat(
-            (d[0] || "") +
-            d[1].join("") + d[2] +
-            d[3].join("")
-        );
+        return {
+            num: parseFloat(
+                (d[0] || "") +
+                d[1].join("") + d[2] +
+                d[3].join("")
+            )
+        }
     }
 %}

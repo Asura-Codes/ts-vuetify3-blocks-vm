@@ -13,13 +13,17 @@
     "@baklavajs/plugin-renderer-vue3": "^1.9.3",
     "@mdi/font": "7.0.96",
     "eventemitter3": "^5.0.1",
+    "highlight.js": "^11.8.0",
+    "nearley": "^2.20.1",
     "roboto-fontface": "*",
+    "simple-code-editor": "^2.0.8",
     "vue": "^3.2.0",
     "vuetify": "^3.0.0",
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {
     "@babel/types": "^7.21.4",
+    "@types/nearley": "^2.11.2",
     "@types/node": "^18.15.0",
     "@types/webfontloader": "^1.6.35",
     "@vitejs/plugin-vue": "^4.2.3",

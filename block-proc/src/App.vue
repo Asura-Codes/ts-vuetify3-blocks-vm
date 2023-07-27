@@ -35,7 +35,7 @@ import RuntimeView from '@/components/RuntimeView.vue'
 <script lang="ts">
 export default {
   data: () => ({
-    tab: 0,
+    tab: 'editor',
   }),
 };
 </script>
