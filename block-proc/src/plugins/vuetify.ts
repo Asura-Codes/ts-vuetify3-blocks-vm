@@ -10,6 +10,7 @@ import 'vuetify/styles'
 
 // Composables
 import { createVuetify } from 'vuetify'
+import { VDataTable } from 'vuetify/labs/VDataTable'
 
 const myCustomLightTheme = {
   dark: true,
@@ -43,5 +44,8 @@ export default createVuetify({
     //     },
     //   },
     // },
+  },
+  components: {
+    VDataTable,
   },
 })

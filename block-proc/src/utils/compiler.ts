@@ -143,6 +143,8 @@ export async function compileFromString(program: string): Promise<Uint8Array | u
                 }
             });
 
+            const size = out.d.offset;
+
             GOTOS.forEach((value, key) => {
                 const offset = LABELS.get(value);
                 if (offset) {
@@ -156,7 +158,7 @@ export async function compileFromString(program: string): Promise<Uint8Array | u
             });
 
             console.log(results);
-            return out.d.sb.slice(0, out.d.offset);
+            return out.d.sb.slice(0, size);
         }
         console.log('Done');
     } catch (err) {

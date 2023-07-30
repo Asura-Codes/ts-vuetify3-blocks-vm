@@ -6,16 +6,16 @@
 
 #include "vm.h"
 
+
 /**
- * Trivial helper to test registers are not out of bounds.
- */
-#define BOUNDS_TEST_REGISTER(r)                                       \
-    {                                                                 \
-        if (r >= REGISTER_COUNT)                                      \
-        {                                                             \
-            svm_default_error_handler(svm, "Register out of bounds"); \
-        }                                                             \
-    }
+ * Internal memory objects
+*/
+float ANALOG_IN[ANALOG_IN_COUNT];
+float ANALOG_OUT[ANALOG_OUT_COUNT];
+
+uint8_t BINARY_IN[BINARY_IN_COUNT];
+uint8_t BINARY_OUT[BINARY_OUT_COUNT];
+
 
 /**
  * Helper to convert a two-byte value to an integer in the range 0x0000-0xffff
@@ -23,50 +23,20 @@
 #define BYTES_TO_ADDR(one, two) (one + (256 * two))
 
 /**
- * This is a macro definition for a "math" operation.
- *
- * It's a little longer than I'd usually use for a macro, but it saves
- * all the typing and redundency defining: add, sub, div, mod, xor, or.
- *
+ * Trivial helper to test arrays are not out of bounds.
  */
-#define MATH_OPERATION(function, operator)                                                               \
-    void function(struct svm *svm)                                                                       \
-    {                                                                                                    \
-        /* get the destination register */                                                               \
-        uint32_t reg = next_byte(svm);                                                                   \
-        BOUNDS_TEST_REGISTER(reg);                                                                       \
-                                                                                                         \
-        /* get the source register */                                                                    \
-        uint32_t src1 = next_byte(svm);                                                                  \
-        BOUNDS_TEST_REGISTER(reg);                                                                       \
-                                                                                                         \
-        /* get the source register */                                                                    \
-        uint32_t src2 = next_byte(svm);                                                                  \
-        BOUNDS_TEST_REGISTER(reg);                                                                       \
-                                                                                                         \
-        if (getenv("DEBUG") != NULL)                                                                     \
-            printf(#function "(Register:%d = Register:%d " #operator" Register:%d)\n", reg, src1, src2); \
-                                                                                                         \
-        /* if the result-register stores a string .. free it */                                          \
-        if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))                \
-            free(svm->registers[reg].content.string);                                                    \
-                                                                                                         \
-        /*                                                                                               \
-         * Ensure both source registers have integer values.                                             \
-         */                                                                                              \
-        operator(svm, reg, src1, src2);                                                                  \
-                                                                                                         \
-        /**                                                                                              \
-         * Zero result?                                                                                  \
-         */                                                                                              \
-        if (svm->registers[reg].content.integer == 0)                                                    \
-            svm->jmp = 1;                                                                                \
-        else                                                                                             \
-            svm->jmp = 0;                                                                                \
-                                                                                                         \
-        /* handle the next instruction */                                                                \
-        svm->ip += 1;                                                                                    \
+int bound_test(svm_t *svm, uint32_t test, uint32_t count)
+{
+    if (test >= count)
+    {
+        svm_default_error_handler(svm, "Register out of bounds");
+        return -1; // Should never happen
     }
+    return 0;
+}
+
+#define BOUNDS_TEST_REGISTER(r) \
+    bound_test(svm, r, REGISTER_COUNT);
 
 /**
  * Foward declarations for code in this module which is not exported.
@@ -114,8 +84,20 @@ float get_float_reg(svm_t *cpu, int reg)
     if (cpu->registers[reg].type == FLOAT)
         return (cpu->registers[reg].content.number);
 
-    svm_default_error_handler(cpu, "The register doesn't contain an integer");
+    svm_default_error_handler(cpu, "The register doesn't contain an number");
     return 0;
+}
+
+/**
+ * Helper to clear the string-content of a register.
+ *
+ * NOTE: This function is not exported outside this compilation-unit.
+ */
+void clear_string_reg(svm_t *cpu, int reg)
+{
+    /* Free the existing string, if present */
+    if ((cpu->registers[reg].type == STRING) && (cpu->registers[reg].content.string))
+        free(cpu->registers[reg].content.string);
 }
 
 /**
@@ -197,7 +179,7 @@ uint8_t next_byte(svm_t *svm)
 void op_unknown(svm_t *svm)
 {
     int instruction = svm->code[svm->ip];
-    printf("%04X - op_unknown(%02X)\n", svm->ip, instruction);
+    jsprintf("%04X - op_unknown(%02X)\n", svm->ip, instruction);
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -222,7 +204,7 @@ void op_nop(struct svm *svm)
     (void)svm;
 
     if (getenv("DEBUG") != NULL)
-        printf("nop()\n");
+        jsprintf("nop()\n");
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -243,11 +225,10 @@ void op_divide(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("DIV(Register:%d = Register:%d / Register:%d)\n", reg, src1, src2);
+        jsprintf("DIV(Register:%d = Register:%d / Register:%d)\n", reg, src1, src2);
 
     /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-        free(svm->registers[reg].content.string);
+    clear_string_reg(svm, reg);
 
     /*
      * Ensure both source registers have integer values.
@@ -295,11 +276,10 @@ void op_reg_store(struct svm *svm)
     BOUNDS_TEST_REGISTER(src);
 
     if (getenv("DEBUG") != NULL)
-        printf("STORE(Reg%02x will be set to contents of Reg%02x)\n", dst, src);
+        jsprintf("STORE(Reg%02x will be set to contents of Reg%02x)\n", dst, src);
 
     /* Free the existing string, if present */
-    if ((svm->registers[dst].type == STRING) && (svm->registers[dst].content.string))
-        free(svm->registers[dst].content.string);
+    clear_string_reg(svm, dst);
 
     /* if storing a string - then use strdup */
     if (svm->registers[src].type == STRING)
@@ -332,11 +312,10 @@ void op_int_store(struct svm *svm)
     int value = BYTES_TO_ADDR(val1, val2);
 
     if (getenv("DEBUG") != NULL)
-        printf("STORE_INT(Reg:%02x) => %04d [Hex:%04x]\n", reg, value, value);
+        jsprintf("STORE_INT(Reg:%02x) => %04d [Hex:%04x]\n", reg, value, value);
 
     /* if the register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-        free(svm->registers[reg].content.string);
+    clear_string_reg(svm, reg);
 
     svm->registers[reg].content.integer = value;
     svm->registers[reg].type = INTEGER;
@@ -355,15 +334,15 @@ void op_int_print(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("INT_PRINT(Register %d)\n", reg);
+        jsprintf("INT_PRINT(Register %d)\n", reg);
 
     /* get the register contents. */
     int val = get_int_reg(svm, reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("[STDOUT] Register R%02d => %d [Hex:%04x]\n", reg, val, val);
+        jsprintf("[STDOUT] Register R%02d => %d [Hex:%04x]\n", reg, val, val);
     else
-        printf("0x%04X", val);
+        jsprintf("0x%04X", val);
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -379,7 +358,7 @@ void op_int_tostring(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("INT_TOSTRING(Register %d)\n", reg);
+        jsprintf("INT_TOSTRING(Register %d)\n", reg);
 
     /* get the contents of the register */
     int cur = get_int_reg(svm, reg);
@@ -406,15 +385,12 @@ void op_int_random(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("INT_RANDOM(Register %d)\n", reg);
+        jsprintf("INT_RANDOM(Register %d)\n", reg);
 
     /**
      * If we already have a string in the register delete it.
      */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-    {
-        free(svm->registers[reg].content.string);
-    }
+    clear_string_reg(svm, reg);
 
     /* set the value. */
     svm->registers[reg].type = INTEGER;
@@ -444,11 +420,10 @@ void op_float_store(struct svm *svm)
     float value = ldexp((float)mant / 65535, exp);
 
     if (getenv("DEBUG") != NULL)
-        printf("STORE_FLOAT(Reg:%02x) => %04f [Hex:%04x]\n", reg, value, *(int *)(&value));
+        jsprintf("STORE_FLOAT(Reg:%02x) => %04f [Hex:%04x]\n", reg, value, *(int *)(&value));
 
     /* if the register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-        free(svm->registers[reg].content.string);
+    clear_string_reg(svm, reg);
 
     svm->registers[reg].content.number = value;
     svm->registers[reg].type = FLOAT;
@@ -467,15 +442,15 @@ void op_float_print(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("FLOAT_PRINT(Register %d)\n", reg);
+        jsprintf("FLOAT_PRINT(Register %d)\n", reg);
 
     /* get the register contents. */
     float val = get_float_reg(svm, reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("[STDOUT] Register R%02d => %f [Hex:%04x]\n", reg, val, *(int *)(&val));
+        jsprintf("[STDOUT] Register R%02d => %f [Hex:%04x]\n", reg, val, *(int *)(&val));
     else
-        printf("%04f", val);
+        jsprintf("%04f", val);
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -491,7 +466,7 @@ void op_float_tostring(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("FLOAT_TOSTRING(Register %d)\n", reg);
+        jsprintf("FLOAT_TOSTRING(Register %d)\n", reg);
 
     /* get the contents of the register */
     float cur = get_float_reg(svm, reg);
@@ -523,10 +498,7 @@ void op_string_store(struct svm *svm)
     /**
      * If we already have a string in the register delete it.
      */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-    {
-        free(svm->registers[reg].content.string);
-    }
+    clear_string_reg(svm, reg);
 
     /**
      * Now store the new string.
@@ -535,7 +507,7 @@ void op_string_store(struct svm *svm)
     svm->registers[reg].content.string = str;
 
     if (getenv("DEBUG") != NULL)
-        printf("STRING_STORE(Register %d) = '%s'\n", reg, str);
+        jsprintf("STRING_STORE(Register %d) = '%s'\n", reg, str);
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -551,16 +523,16 @@ void op_string_print(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("STRING_PRINT(Register %d)\n", reg);
+        jsprintf("STRING_PRINT(Register %d)\n", reg);
 
     /* get the contents of the register */
     char *str = get_string_reg(svm, reg);
 
     /* print */
     if (getenv("DEBUG") != NULL)
-        printf("[stdout] register R%02d => %s\n", reg, str);
+        jsprintf("[stdout] register R%02d => %s\n", reg, str);
     else
-        printf("%s", str);
+        jsprintf("%s", str);
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -584,7 +556,7 @@ void op_string_concat(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("STRING_CONCAT(Register:%d = Register:%d + Register:%d)\n",
+        jsprintf("STRING_CONCAT(Register:%d = Register:%d + Register:%d)\n",
                reg, src1, src2);
 
     /*
@@ -610,8 +582,7 @@ void op_string_concat(struct svm *svm)
     sprintf(tmp, "%s%s", str1, str2);
 
     /* if the destination-register currently contains a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-        free(svm->registers[reg].content.string);
+    clear_string_reg(svm, reg);
 
     svm->registers[reg].content.string = tmp;
     svm->registers[reg].type = STRING;
@@ -630,14 +601,14 @@ void op_string_system(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("STRING_SYSTEM(Register %d)\n", reg);
+        jsprintf("STRING_SYSTEM(Register %d)\n", reg);
 
     /* Get the value we're to execute */
     char *str = get_string_reg(svm, reg);
 
     if (getenv("FUZZ") != NULL)
     {
-        printf("Fuzzing - skipping execution of: %s\n", str);
+        jsprintf("Fuzzing - skipping execution of: %s\n", str);
         return;
     }
 
@@ -658,7 +629,7 @@ void op_string_toint(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("STRING_TOINT(Register:%d)\n", reg);
+        jsprintf("STRING_TOINT(Register:%d)\n", reg);
 
     /* get the string and convert to integer */
     char *str = get_string_reg(svm, reg);
@@ -692,7 +663,7 @@ void op_jump_to(struct svm *svm)
     int offset = BYTES_TO_ADDR(off1, off2);
 
     if (getenv("DEBUG") != NULL)
-        printf("JUMP_TO(Offset:%d [Hex:%04X]\n", offset, offset);
+        jsprintf("JUMP_TO(Offset:%d [Hex:%04X]\n", offset, offset);
 
     svm->ip = offset;
 }
@@ -714,7 +685,7 @@ void op_jump_z(struct svm *svm)
     int offset = BYTES_TO_ADDR(off1, off2);
 
     if (getenv("DEBUG") != NULL)
-        printf("JUMP_Z(Offset:%d [Hex:%04X]\n", offset, offset);
+        jsprintf("JUMP_Z(Offset:%d [Hex:%04X]\n", offset, offset);
 
     if (svm->jmp)
     {
@@ -744,7 +715,7 @@ void op_jump_nz(struct svm *svm)
     int offset = BYTES_TO_ADDR(off1, off2);
 
     if (getenv("DEBUG") != NULL)
-        printf("JUMP_NZ(Offset:%d [Hex:%04X]\n", offset, offset);
+        jsprintf("JUMP_NZ(Offset:%d [Hex:%04X]\n", offset, offset);
 
     if (!svm->jmp)
     {
@@ -761,9 +732,9 @@ void reg_add(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
 {
     if (svm->registers[lhs].type == FLOAT || svm->registers[rhs].type == FLOAT)
     {
-        svm->registers[out].type = FLOAT;
         svm->registers[out].content.number =
             (svm->registers[lhs].type == FLOAT ? get_float_reg(svm, lhs) : get_int_reg(svm, lhs)) + (svm->registers[rhs].type == FLOAT ? get_float_reg(svm, rhs) : get_int_reg(svm, rhs));
+        svm->registers[out].type = FLOAT;
     }
     else
     {
@@ -776,8 +747,8 @@ void reg_and(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
 {
     if (svm->registers[lhs].type == FLOAT || svm->registers[rhs].type == FLOAT)
     {
-        svm->registers[out].type = FLOAT;
         svm->registers[out].content.number = svm->registers[lhs].content.integer & svm->registers[rhs].content.integer;
+        svm->registers[out].type = FLOAT;
     }
     else
     {
@@ -790,9 +761,9 @@ void reg_sub(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
 {
     if (svm->registers[lhs].type == FLOAT || svm->registers[rhs].type == FLOAT)
     {
-        svm->registers[out].type = FLOAT;
         svm->registers[out].content.number =
             (svm->registers[lhs].type == FLOAT ? get_float_reg(svm, lhs) : get_int_reg(svm, lhs)) - (svm->registers[rhs].type == FLOAT ? get_float_reg(svm, rhs) : get_int_reg(svm, rhs));
+        svm->registers[out].type = FLOAT;
     }
     else
     {
@@ -805,9 +776,9 @@ void reg_mul(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
 {
     if (svm->registers[lhs].type == FLOAT || svm->registers[rhs].type == FLOAT)
     {
-        svm->registers[out].type = FLOAT;
         svm->registers[out].content.number =
             (svm->registers[lhs].type == FLOAT ? get_float_reg(svm, lhs) : get_int_reg(svm, lhs)) * (svm->registers[rhs].type == FLOAT ? get_float_reg(svm, rhs) : get_int_reg(svm, rhs));
+        svm->registers[out].type = FLOAT;
     }
     else
     {
@@ -820,8 +791,8 @@ void reg_xor(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
 {
     if (svm->registers[lhs].type == FLOAT || svm->registers[rhs].type == FLOAT)
     {
-        svm->registers[out].type = FLOAT;
         svm->registers[out].content.number = svm->registers[lhs].content.integer ^ svm->registers[rhs].content.integer;
+        svm->registers[out].type = FLOAT;
     }
     else
     {
@@ -834,8 +805,8 @@ void reg_or(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
 {
     if (svm->registers[lhs].type == FLOAT || svm->registers[rhs].type == FLOAT)
     {
-        svm->registers[out].type = FLOAT;
         svm->registers[out].content.number = svm->registers[lhs].content.integer | svm->registers[rhs].content.integer;
+        svm->registers[out].type = FLOAT;
     }
     else
     {
@@ -844,12 +815,85 @@ void reg_or(struct svm *svm, uint8_t out, uint8_t lhs, uint8_t rhs)
     }
 }
 
-MATH_OPERATION(op_add, reg_add) // reg_result = reg1 + reg2 ;
-MATH_OPERATION(op_and, reg_and) // reg_result = reg1 & reg2 ;
-MATH_OPERATION(op_sub, reg_sub) // reg_result = reg1 - reg2 ;
-MATH_OPERATION(op_mul, reg_mul) // reg_result = reg1 * reg2 ;
-MATH_OPERATION(op_xor, reg_xor) // reg_result = reg1 ^ reg2 ;
-MATH_OPERATION(op_or, reg_or)   // reg_result = reg1 | reg2 ;
+/**
+ * This is a macro definition for a "math" operation.
+ *
+ * It's a little longer than I'd usually use for a macro, but it saves
+ * all the typing and redundency defining: add, sub, div, mod, xor, or.
+ *
+ */
+void math_operation(struct svm *svm, void (*operator)(struct svm *, uint8_t, uint8_t, uint8_t), const char *ope)
+{
+    /* get the destination register */
+    uint32_t reg = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* get the source register */
+    uint32_t src1 = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* get the source register */
+    uint32_t src2 = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    if (getenv("DEBUG") != NULL)
+        jsprintf("(Register:%d = Register:%d %s Register:%d)\n", reg, src1, ope, src2);
+
+    /* if the result-register stores a string .. free it */
+    clear_string_reg(svm, reg);
+
+    /*
+     * Ensure both source registers have integer values.
+     */
+    operator(svm, reg, src1, src2);
+
+    /**
+     * Zero result?
+     */
+    if (svm->registers[reg].content.integer == 0)
+        svm->jmp = 1;
+    else
+        svm->jmp = 0;
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+void op_add(struct svm *in)
+{
+    // reg_result = reg1 + reg2 ;
+    math_operation(in, reg_add, "add");
+}
+
+void op_and(struct svm *in)
+{
+    // reg_result = reg1 & reg2 ;
+    math_operation(in, reg_and, "and");
+}
+
+void op_sub(struct svm *in)
+{
+    // reg_result = reg1 - reg2 ;
+    math_operation(in, reg_sub, "sub");
+}
+
+void op_mul(struct svm *in)
+{
+    // reg_result = reg1 * reg2 ;
+    math_operation(in, reg_mul, "mul");
+}
+
+void op_xor(struct svm *in)
+{
+    // reg_result = reg1 ^ reg2 ;
+    math_operation(in, reg_xor, "xor");
+}
+
+void op_or(struct svm *in)
+{
+    // reg_result = reg1 | reg2 ;
+    math_operation(in, reg_or, "or");
+}
 
 /**
  * Increment the given (integer) register.
@@ -861,7 +905,7 @@ void op_inc(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("INC_OP(Register %d)\n", reg);
+        jsprintf("INC_OP(Register %d)\n", reg);
 
     /* get, incr, set */
     int cur = get_int_reg(svm, reg);
@@ -887,7 +931,7 @@ void op_dec(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("DEC_OP(Register %d)\n", reg);
+        jsprintf("DEC_OP(Register %d)\n", reg);
 
     /* get, decr, set */
     int cur = get_int_reg(svm, reg);
@@ -917,7 +961,7 @@ void op_cmp_reg(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg2);
 
     if (getenv("DEBUG") != NULL)
-        printf("CMP(Register:%d vs Register:%d)\n", reg1, reg2);
+        jsprintf("CMP(Register:%d vs Register:%d)\n", reg1, reg2);
 
     svm->jmp = 0;
 
@@ -956,7 +1000,7 @@ void op_cmp_immediate(struct svm *svm)
     int val = BYTES_TO_ADDR(val1, val2);
 
     if (getenv("DEBUG") != NULL)
-        printf("CMP_IMMEDIATE(Register:%d vs %d [Hex:%04X])\n", reg, val, val);
+        jsprintf("CMP_IMMEDIATE(Register:%d vs %d [Hex:%04X])\n", reg, val, val);
 
     svm->jmp = 0;
 
@@ -985,7 +1029,7 @@ void op_cmp_string(struct svm *svm)
     char *cur = get_string_reg(svm, reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("Comparing register-%d ('%s') - with string '%s'\n", reg, cur, str);
+        jsprintf("Comparing register-%d ('%s') - with string '%s'\n", reg, cur, str);
 
     /* compare */
     if (strcmp(cur, str) == 0)
@@ -1007,7 +1051,7 @@ void op_is_string(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("is register %02X a string?\n", reg);
+        jsprintf("is register %02X a string?\n", reg);
 
     if (svm->registers[reg].type == STRING)
         svm->jmp = 1;
@@ -1028,7 +1072,7 @@ void op_is_integer(struct svm *svm)
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
-        printf("is register %02X an integer?\n", reg);
+        jsprintf("is register %02X an integer?\n", reg);
 
     if (svm->registers[reg].type == INTEGER)
         svm->jmp = 1;
@@ -1053,7 +1097,7 @@ void op_peek(struct svm *svm)
     BOUNDS_TEST_REGISTER(addr);
 
     if (getenv("DEBUG") != NULL)
-        printf("LOAD_FROM_RAM(Register:%d will contain contents of address %04X)\n",
+        jsprintf("LOAD_FROM_RAM(Register:%d will contain contents of address %04X)\n",
                reg, addr);
 
     /* get the address from the register */
@@ -1065,8 +1109,7 @@ void op_peek(struct svm *svm)
     int val = svm->code[adr];
 
     /* if the destination currently contains a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-        free(svm->registers[reg].content.string);
+    clear_string_reg(svm, reg);
 
     svm->registers[reg].content.integer = val;
     svm->registers[reg].type = INTEGER;
@@ -1095,7 +1138,7 @@ void op_poke(struct svm *svm)
     int adr = get_int_reg(svm, addr);
 
     if (getenv("DEBUG") != NULL)
-        printf("STORE_IN_RAM(Address %04X set to %02X)\n", adr, val);
+        jsprintf("STORE_IN_RAM(Address %04X set to %02X)\n", adr, val);
 
     if (adr < 0 || adr > 0xffff)
         svm_default_error_handler(svm, "Writing outside RAM");
@@ -1139,7 +1182,7 @@ void op_memcpy(struct svm *svm)
 
     if (getenv("DEBUG") != NULL)
     {
-        printf("Copying %4x bytes from %04x to %04X\n", size, src, dest);
+        jsprintf("Copying %4x bytes from %04x to %04X\n", size, src, dest);
     }
 
     /** Slow, but copes with nulls and allows debugging. */
@@ -1161,7 +1204,7 @@ void op_memcpy(struct svm *svm)
 
         if (getenv("DEBUG") != NULL)
         {
-            printf("\tCopying from: %04x Copying-to %04X\n", sc, dt);
+            jsprintf("\tCopying from: %04x Copying-to %04X\n", sc, dt);
         }
 
         svm->code[dt] = svm->code[sc];
@@ -1186,16 +1229,15 @@ void op_stack_push(struct svm *svm)
     {
         val.content.string = strdup(svm->registers[reg].content.string);
     }
-    // int val = get_int_reg(svm, reg);
 
     if (getenv("DEBUG") != NULL)
     {
-        if (svm->registers[reg].type == INTEGER)
-            printf("PUSH(Register %d [=%04x])\n", reg, val.content.integer);
-        if (svm->registers[reg].type == FLOAT)
-            printf("PUSH(Register %d [=%04f])\n", reg, val.content.number);
-        if (svm->registers[reg].type == STRING)
-            printf("PUSH(Register %d [=%s])\n", reg, val.content.string);
+        if (val.type == INTEGER)
+            jsprintf("PUSH(Register %d integer[=%04x])\n", reg, val.content.integer);
+        if (val.type == FLOAT)
+            jsprintf("PUSH(Register %d number[=%f])\n", reg, val.content.number);
+        if (val.type == STRING)
+            jsprintf("PUSH(Register %d string[=%s])\n", reg, val.content.string);
     }
 
     /* store it */
@@ -1232,17 +1274,16 @@ void op_stack_pop(struct svm *svm)
 
     if (getenv("DEBUG") != NULL)
     {
-        if (svm->registers[reg].type == INTEGER)
-            printf("POP(Register %d [=%04x])\n", reg, val.content.integer);
-        if (svm->registers[reg].type == FLOAT)
-            printf("POP(Register %d [=%04f])\n", reg, val.content.number);
-        if (svm->registers[reg].type == STRING)
-            printf("POP(Register %d [=%s])\n", reg, val.content.string);
+        if (val.type == INTEGER)
+            jsprintf("POP(Register %d integer[=%04x])\n", reg, val.content.integer);
+        if (val.type == FLOAT)
+            jsprintf("POP(Register %d number[=%f])\n", reg, val.content.number);
+        if (val.type == STRING)
+            jsprintf("POP(Register %d string[=%s])\n", reg, val.content.string);
     }
 
     /* if the register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
-        free(svm->registers[reg].content.string);
+    clear_string_reg(svm, reg);
 
     svm->registers[reg] = val;
 
@@ -1257,26 +1298,20 @@ void op_stack_pop(struct svm *svm)
 void op_stack_ret(struct svm *svm)
 {
     /* ensure we're not outside the stack. */
-    if (svm->SP <= 0)
+    if (svm->CSP <= 0)
         svm_default_error_handler(svm, "stack overflow - stack is empty");
 
     /* Get the value from the stack. */
-    struct reg_t val = svm->stack[svm->SP];
-    svm->SP -= 1;
+    int val = svm->call_stack[svm->CSP];
+    svm->CSP -= 1;
 
     if (getenv("DEBUG") != NULL)
     {
-        if (val.type == INTEGER)
-            printf("RET() => %04x\n", val.content.integer);
-        if (val.type == FLOAT)
-            printf("RET() ERROR => %04f\n", val.content.number);
-        if (val.type == STRING)
-            printf("RET() ERROR => %s\n", val.content.string);
+        jsprintf("RET() => %04x\n", val);
     }
 
     /* update our instruction pointer. */
-    if (val.type == INTEGER)
-        svm->ip = val.content.integer;
+    svm->ip = val;
 }
 
 /**
@@ -1295,10 +1330,10 @@ void op_stack_call(struct svm *svm)
      */
     int offset = BYTES_TO_ADDR(off1, off2);
 
-    int sp_size = sizeof(svm->stack) / sizeof(svm->stack[0]);
-    svm->SP += 1;
+    int sp_size = sizeof(svm->call_stack) / sizeof(svm->call_stack[0]);
+    svm->CSP += 1;
 
-    if (svm->SP >= sp_size)
+    if (svm->CSP >= sp_size)
         svm_default_error_handler(svm, "stack overflow - stack is full!");
 
     /**
@@ -1306,15 +1341,116 @@ void op_stack_call(struct svm *svm)
      * on the stack so that the "ret(urn)" instruction will go
      * to the correct place.
      */
-    struct reg_t val;
-    val.type = INTEGER;
-    val.content.integer = svm->ip + 1;
-    svm->stack[svm->SP] = val;
+    svm->call_stack[svm->CSP] = svm->ip + 1;
 
     /**
      * Now we've saved the return-address we can update the IP
      */
     svm->ip = offset;
+}
+
+/**
+ * Store an binary values in a register.
+ */
+void op_binary_load(struct svm *svm)
+{
+    /* get the destination register */
+    uint32_t dst = next_byte(svm);
+    BOUNDS_TEST_REGISTER(dst);
+
+    /* get the source binary address */
+    uint32_t src = next_byte(svm);
+    bound_test(svm, src, BINARY_IN_COUNT);
+
+    if (getenv("DEBUG") != NULL)
+        jsprintf("STORE(Reg%02x will be set to contents of Binary%02x)\n", dst, src);
+
+    /* Free the existing string, if present */
+    clear_string_reg(svm, dst);
+
+    /* storing a binary (0xFF - 8-bits) as integer */
+    svm->registers[dst].type = INTEGER;
+    svm->registers[dst].content.integer = BINARY_IN[src];
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+/**
+ * Store an register integer value in a binary output.
+ */
+void op_binary_save(struct svm *svm)
+{
+    /* get the destination register */
+    uint32_t src = next_byte(svm);
+    BOUNDS_TEST_REGISTER(src);
+
+    /* get the source binary address */
+    uint32_t dst = next_byte(svm);
+    bound_test(svm, dst, BINARY_OUT_COUNT);
+
+    if (getenv("DEBUG") != NULL)
+        jsprintf("STORE(Binary%02x will be set to contents of Reg%02x)\n", dst, src);
+
+    /* storing a binary (0xFF - 8-bits) as integer */
+    if (svm->registers[src].type == INTEGER)
+        BINARY_OUT[dst] = svm->registers[src].content.integer;
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+/**
+ * Store an analog value in a register.
+ */
+void op_analog_load(struct svm *svm)
+{
+    /* get the destination register */
+    uint32_t dst = next_byte(svm);
+    BOUNDS_TEST_REGISTER(dst);
+
+    /* get the source binary address */
+    uint32_t src = next_byte(svm);
+    bound_test(svm, src, ANALOG_IN_COUNT);
+
+    if (getenv("DEBUG") != NULL)
+        jsprintf("STORE(Reg%02x will be set to contents of Analog%02x)\n", dst, src);
+
+    /* Free the existing string, if present */
+    clear_string_reg(svm, dst);
+
+    /* storing a analog as float */
+    svm->registers[dst].type = FLOAT;
+    svm->registers[dst].content.number = ANALOG_IN[src];
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+/**
+ * Store an register integer value in a binary output.
+ */
+void op_analog_save(struct svm *svm)
+{
+    /* get the destination register */
+    uint32_t src = next_byte(svm);
+    BOUNDS_TEST_REGISTER(src);
+
+    /* get the source binary address */
+    uint32_t dst = next_byte(svm);
+    bound_test(svm, dst, ANALOG_OUT_COUNT);
+
+    if (getenv("DEBUG") != NULL)
+        jsprintf("STORE(Analog%02x will be set to contents of Reg%02x)\n", dst, src);
+
+    /* storing a analog as float */
+    if (svm->registers[src].type == FLOAT)
+        ANALOG_OUT[dst] = svm->registers[src].content.number;
+    if (svm->registers[src].type == INTEGER)
+        ANALOG_OUT[dst] = svm->registers[src].content.integer;
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
 /**
@@ -1350,6 +1486,11 @@ void opcode_init(svm_t *svm)
     svm->opcodes[FLOAT_STORE] = op_float_store;
     svm->opcodes[FLOAT_PRINT] = op_float_print;
     svm->opcodes[FLOAT_TOSTRING] = op_float_tostring;
+
+    svm->opcodes[BINARY_LOAD] = op_binary_load;
+    svm->opcodes[BINARY_SAVE] = op_binary_save;
+    svm->opcodes[ANALOG_LOAD] = op_analog_load;
+    svm->opcodes[ANALOG_SAVE] = op_analog_save;
 
     /* jumps */
     svm->opcodes[JUMP_TO] = op_jump_to;

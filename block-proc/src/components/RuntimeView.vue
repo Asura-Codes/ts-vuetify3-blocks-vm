@@ -5,12 +5,14 @@ import { compileFromString } from "../utils/compiler";
 import svmasm from "../utils/svmasm";
 import hljs from "highlight.js";
 import CodeEditor from "simple-code-editor/CodeEditor.vue";
+// import VueCommand, { createStdout } from "vue-command";
+import "vue-command/dist/vue-command.css";
 
 hljs.registerLanguage("svmasm", svmasm);
 </script>
 
 <template>
-  <v-card>
+  <div>
     <v-item-group multiple>
       <v-btn
         class="ma-2"
@@ -19,17 +21,19 @@ hljs.registerLanguage("svmasm", svmasm);
         fab
         color="primary"
         @click="compileProgram"
-        >Compile Program</v-btn
       >
+        Compile Program
+      </v-btn>
       <v-btn
         class="ma-2"
         outlined
         x-large
         fab
         color="primary"
-        @click="runProgram"
-        >Run Program</v-btn
+        @click="() => ($refs.console as any).dispatch('run')"
       >
+        Run Program
+      </v-btn>
       <v-btn
         class="ma-2"
         outlined
@@ -37,44 +41,100 @@ hljs.registerLanguage("svmasm", svmasm);
         fab
         color="primary"
         @click="printBuffers"
-        >Print Buffers</v-btn
       >
+        Print Buffers
+      </v-btn>
+      <v-btn class="ma-2" outlined x-large fab color="primary" @click="debug">
+        Debug
+      </v-btn>
     </v-item-group>
-    <div id="editor">
-      <CodeEditor
-        v-model="code"
-        :line-nums="true"
-        :languages="[
-          ['svmasm', 'SVM']
-        ]"
-        :tab-spaces="4"
-        :wrap="false"
-        :header="true"
-        :display-language="true"
-        theme="hybrid"
-        font-size="22px"
-        width="100%"
-        height="100%"
-        padding="1%"
-        border-radius="4px"
-        :copy-code="true"
-        :lang-list-display="false"
-        color="white"
-      ></CodeEditor>
+    <div class="mx-auto" max-width="98vw" outlined>
+      <v-data-table
+        v-model:page="page"
+        :headers="headers"
+        :items="buffers"
+        class="elevation-1"
+        item-key="name"
+        fixed-header
+        :items-per-page="4"
+        hide-default-footer
+        height="284px"
+      >
+        <template v-slot:column.name="{ column }">
+          {{ column.title.toUpperCase() }}
+        </template>
+
+        <template v-slot:body="{ items }">
+          <tr v-for="(row, rowIdx) in items" :key="rowIdx">
+            <td>{{ row.columns.name }}</td>
+            <td v-for="(item, idx) in row.raw.arr" :key="idx">
+              {{ console.log(item) }}
+              <v-text-field
+                v-if="row.raw.editable"
+                :value="item"
+                @input="(event: any) => { row.raw.arr[idx] = row.raw.dest[idx] = Number(event.target.value); }"
+                single-line
+                class="num-field"
+                hide-details
+                type="number"
+              ></v-text-field>
+              <span v-else>{{ item }}</span>
+            </td>
+          </tr>
+        </template>
+
+        <template v-slot:bottom></template>
+      </v-data-table>
     </div>
-  </v-card>
+    <div id="editor">
+        <v-row align="start" style="height: 100%;">
+          <v-col class="pa-0 ma-0" style="height: 100%;">
+            <v-sheet class="pa-0 ma-0" style="height: 100%;">
+              <CodeEditor
+                v-model="code"
+                :line-nums="true"
+                :languages="[['svmasm', 'SVM']]"
+                :tab-spaces="4"
+                :wrap="false"
+                :header="true"
+                :display-language="true"
+                theme="github-dark-dimmed"
+                font-size="22px"
+                width="100%"
+                height="100%"
+                padding="10px"
+                border-radius="4px"
+                :copy-code="true"
+                :lang-list-display="false"
+                color="white"
+              ></CodeEditor>
+            </v-sheet>
+          </v-col>
+          <v-col class="pa-0 ma-0" style="height: 100%;">
+            <v-sheet class="pa-0 ma-0" style="height: 100%;">
+              <vue-command ref="console" :commands="commands" hide-bar style="height: 100%; width: 96%;"/>
+            </v-sheet>
+          </v-col>
+        </v-row>
+    </div>
+  </div>
 </template>
 
 <style scoped>
 #editor {
   display: block;
-  height: calc(100vh - 154px);
-  width: 100vw;
+  height: calc(100vh - 390px);
   line-height: normal !important;
+}
+.num-field {
+  margin-left: 0px !important;
+  margin-right: 0px !important;
 }
 </style>
 
 <script lang="ts">
+const VueCommand = require('vue-command');
+
 export default {
   data: () => ({
     vm: undefined as VM_t | undefined,
@@ -82,9 +142,19 @@ export default {
     arrAnalogOuputs: undefined as Float32Array | undefined,
     arrBinaryInputs: undefined as Uint8Array | undefined,
     arrBinaryOuputs: undefined as Uint8Array | undefined,
-    code: "store #1, 1.1" as string,
+    code: "" as string,
     program: undefined as Uint8Array | undefined,
+
+    // Table
+    page: 1,
+    buffers: [] as any[],
+    msg: '',
   }),
+  props: {
+    codeText: {
+      type: String,
+    },
+  },
   methods: {
     async compileProgram() {
       this.program = await compileFromString(this.code);
@@ -92,12 +162,16 @@ export default {
       console.log("program:");
       console.log(this.program);
     },
-    runProgram() {
-      this.vm?.print_message("hello");
+    async runProgram() {
+      await this.compileProgram();
+      this.setBuffers();
 
       if (this.program) {
         this.vm?.RunProgram(this.program);
       }
+
+      this.getBuffers();
+      this.fillBuffersTable();
     },
     getBuffers() {
       this.arrAnalogInputs = this.vm?.getAnalogInputs();
@@ -107,9 +181,7 @@ export default {
     },
     setBuffers() {
       if (this.arrAnalogInputs) this.vm?.setAnalogInputs(this.arrAnalogInputs);
-      if (this.arrAnalogOuputs) this.vm?.setAnalogOuputs(this.arrAnalogOuputs);
       if (this.arrBinaryInputs) this.vm?.setBinaryInputs(this.arrBinaryInputs);
-      if (this.arrBinaryOuputs) this.vm?.setBinaryOuputs(this.arrBinaryOuputs);
     },
     printBuffers() {
       this.vm?.printAnalogInputs();
@@ -117,16 +189,89 @@ export default {
       this.vm?.printBinaryInputs();
       this.vm?.printBinaryOuputs();
     },
+    debug() {
+      console.log(this.arrAnalogInputs);
+      console.log(this.arrAnalogOuputs);
+      console.log(this.arrBinaryInputs);
+      console.log(this.arrBinaryOuputs);
+    },
+    fillBuffersTable() {
+      if (
+        this.arrAnalogInputs &&
+        this.arrAnalogOuputs &&
+        this.arrBinaryInputs &&
+        this.arrBinaryOuputs
+      ) {
+        this.buffers = [
+          {
+            name: "Analog IN",
+            editable: true,
+            arr: Array.from(this.arrAnalogInputs),
+            dest: this.arrAnalogInputs,
+          },
+          {
+            name: "Binary IN",
+            editable: true,
+            arr: Array.from(this.arrBinaryInputs),
+            dest: this.arrBinaryInputs,
+          },
+          {
+            name: "Analog Out",
+            arr: Array.from(this.arrAnalogOuputs),
+            dest: this.arrAnalogOuputs,
+          },
+          {
+            name: "Binary OUT",
+            arr: Array.from(this.arrBinaryOuputs),
+            dest: this.arrBinaryOuputs,
+          },
+        ];
+      }
+    },
+  },
+  computed: {
+    headers() {
+      const hds = [
+        { title: "Buffer name", align: "start", key: "name", width: "140px" },
+        ...Array.from(
+          { length: this.arrAnalogInputs?.length ?? 0 },
+          (_, i) => ({ title: `[${i}]`, align: "start", key: `${i}` })
+        ),
+      ];
+      return hds as any;
+    },
+    
+    commands() {
+      return {
+        "run": async () => {
+          this.msg = '';
+          await this.runProgram();
+          return VueCommand.createStdout(this.msg);
+        },
+      }
+    }
   },
   mounted() {
-    console.log(Module);
+    if (this.codeText) this.code = this.codeText;
+    console.log("RuntimeView mounted");
 
     if (this.vm == undefined) {
       Module().then((myModule: VM_t) => {
         this.vm = myModule;
         this.getBuffers();
+        this.fillBuffersTable();
       });
     }
+
+    (window as any).createStdoutQ8YQPV9U = (msg: string) => {
+      this.msg += msg;
+    };
+  },
+  beforeUnmount() {
+    console.log("RuntimeView beforeUnmount");
+  },
+  unmounted() {
+    console.log("RuntimeView unmounted");
   },
   components: {
     CodeEditor,

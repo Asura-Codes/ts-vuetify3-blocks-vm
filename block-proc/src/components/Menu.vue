@@ -1,7 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div>
+  <div class="v-toolbar__content">
     <!-- <v-tooltip text="Tooltip">
             <template v-slot:activator="{ props }">
                 <span v-bind="props">Dodaj: </span>
@@ -58,6 +58,16 @@
         </v-list-item>
       </v-list>
     </v-menu>
+    <div class="text-right" style="width: 100%">
+      <v-btn
+        class="ma-2"
+        x-large
+        color="light"
+        @click="onClick('compile', 'program')"
+      >
+        Compile Program
+      </v-btn>
+    </div>
   </div>
 </template>
 

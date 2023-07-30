@@ -3,8 +3,10 @@
 #include <emscripten/emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten.h>
 
 #include "vm/vm.h"
+#include "vm/jsprintf.h"
 
 
 /**
@@ -25,9 +27,9 @@
   void funName() {                                \
     emscripten_log(EM_LOG_CONSOLE, #funName":");  \
     for (int i{ 0 }; i < count; i++) {            \
-      printf(format, buffer[i]);                  \
+      jsprintf(format, buffer[i]);                  \
     }                                             \
-    printf("\n\n");                               \
+    jsprintf("\n\n");                               \
   }
 
 
@@ -59,6 +61,19 @@ void error(char *msg)
   emscripten_force_exit(1);
 }
 
+EM_JS(void, call_js_agrs, (const char *msg), {
+    createStdoutQ8YQPV9U(UTF8ToString(msg));
+});
+
+/**
+ * Handling errors from VM
+*/
+void print(char *msg)
+{
+  call_js_agrs(msg);
+  // emscripten_log(EM_LOG_ERROR, "INFO - %s\n", msg);
+}
+
 /**
  * Show the content of the various registers.
  */
@@ -66,35 +81,35 @@ void svm_dump_registers(svm_t * cpup)
 {
     int i;
 
-    printf("Register dump\n");
+    jsprintf("Register dump\n");
 
     for (i = 0; i < REGISTER_COUNT; i++)
     {
         if (cpup->registers[i].type == reg_t::STRING)
         {
-            printf("\tRegister %02d - str: %s\n", i, cpup->registers[i].content.string);
+            jsprintf("\tRegister %02d - str: %s\n", i, cpup->registers[i].content.string);
         } else if (cpup->registers[i].type == reg_t::INTEGER)
         {
-            printf("\tRegister %02d - Decimal:%04d [Hex:%04X]\n", i,
+            jsprintf("\tRegister %02d - Decimal:%04d [Hex:%04X]\n", i,
                    cpup->registers[i].content.integer,
                    cpup->registers[i].content.integer);
         } else if (cpup->registers[i].type == reg_t::FLOAT)
         {
-            printf("\tRegister %02d - Number:%04f [Hex:%04X]\n", i,
+            jsprintf("\tRegister %02d - Number:%04f [Hex:%04X]\n", i,
                    cpup->registers[i].content.number,
                    cpup->registers[i].content.integer);
         } else
         {
-            printf("\tRegister %02d has unknown type!\n", i);
+            jsprintf("\tRegister %02d has unknown type!\n", i);
         }
     }
 
     if (cpup->jmp == 1)
     {
-        printf("\tZ-FLAG:true\n");
+        jsprintf("\tZ-FLAG:true\n");
     } else
     {
-        printf("\tZ-FLAG:false\n");
+        jsprintf("\tZ-FLAG:false\n");
     }
 
 }
@@ -105,6 +120,8 @@ void svm_dump_registers(svm_t * cpup)
 int RunProgram(emscripten::val const &vmachine_code)
 {
   std::vector<uint8_t> code;
+
+  jsprintf_handler = print;
 
   // Skopiowanie kodu z wejścia
   code = emscripten::convertJSArrayToNumberVector<uint8_t>(vmachine_code);
@@ -138,7 +155,7 @@ int RunProgram(emscripten::val const &vmachine_code)
    */
   svm_free(cpu);
 
-  printf("RunProgram ends\n\n");
+  jsprintf("RunProgram ends\n\n");
 
   return 0;
 }

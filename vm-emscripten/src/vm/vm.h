@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include "mem.h"
+#include "jsprintf.h"
 
 
 #ifdef __cplusplus
@@ -42,6 +43,14 @@ enum opcode_t
     FLOAT_STORE,
     FLOAT_PRINT,
     FLOAT_TOSTRING,
+    
+    /**
+     * Source I/O operations.
+     */
+    BINARY_LOAD,
+    BINARY_SAVE,
+    ANALOG_LOAD,
+    ANALOG_SAVE,
 
     /**
      * Jump operations.
@@ -107,7 +116,8 @@ enum opcode_t
  * Count of registers.
  */
 #define REGISTER_COUNT 10
-#define STACK_COUNT 512
+#define STACK_COUNT 128
+#define CALL_STACK_COUNT 64
 
 
 /**
@@ -188,11 +198,22 @@ typedef struct svm {
      * only a small number of entries permitted.
      */
     struct reg_t stack[STACK_COUNT];
+    
+    /**
+     * This is the call stack for the virtual machine.  There are
+     * only a small number of entries permitted.
+     */
+    int call_stack[CALL_STACK_COUNT];
 
     /**
      * The stack pointer which starts from zero and grows upwards.
      */
     int SP;
+    
+    /**
+     * The call stack pointer which starts from zero and grows upwards.
+     */
+    int CSP;
 
     /**
      * State - Shouldn't really be here.

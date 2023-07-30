@@ -107,6 +107,7 @@ svm_t *svm_new(unsigned char *code, uint32_t size, void (*fp)(char *msg))
      * Stack is empty.
      */
     cpun->SP = 0;
+    cpun->CSP = 0;
 
     /**
      * Set error handler callback.
@@ -185,7 +186,7 @@ void svm_run(svm_t *cpup)
         int opcode = cpup->code[cpup->ip];
 
         if (getenv("DEBUG") != NULL)
-            printf("%04x - Parsing OpCode Hex:%02X\n", cpup->ip, opcode);
+            jsprintf("%04x - Parsing OpCode Hex:%02X\n", cpup->ip, opcode);
 
         /**
          * Call the opcode implementation, if defined.
@@ -216,5 +217,5 @@ void svm_run(svm_t *cpup)
     }
 
     if (getenv("DEBUG") != NULL)
-        printf("Executed %u instructions\n", iterations);
+        jsprintf("Executed %u instructions\n", iterations);
 }

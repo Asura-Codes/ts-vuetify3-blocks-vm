@@ -4,11 +4,13 @@ export class Maths extends Node {
     type: string;
     name: string;
     noInputs: number;
+    code: string;
 
     constructor(inputs: number) {
         super();
         this.type = "Maths";
         this.name = "Arytmetyka";
+        this.code = '';
         this.noInputs = inputs;
         
         this.addOutputInterface("Wyj");
@@ -23,30 +25,44 @@ export class Maths extends Node {
 
     calculate() {
         const operation = this.getOptionValue("Operacja");
-        let value = 0;
+        const label = this.id.replaceAll('_', '');
 
-        console.log(`Logic`);
+        let oper = 'add';
         
         if (operation === '+') {
-            for (let i = 1; i <= this.noInputs; i++) 
-                value += this.getInterface("Wej_" + i.toString()).value;
+            oper = 'add';
         }
         if (operation === '-') {
-            value = this.getInterface("Wej_1").value;
-            for (let i = 2; i <= this.noInputs; i++) 
-                value -= this.getInterface("Wej_" + i.toString()).value;
+            oper = 'sub';
         }
         if (operation === '*') {
-            value = this.getInterface("Wej_1").value;
-            for (let i = 2; i <= this.noInputs; i++) 
-                value *= this.getInterface("Wej_" + i.toString()).value;
+            oper = 'mul';
         }
         if (operation === '/') {
-            value = this.getInterface("Wej_1").value;
-            for (let i = 2; i <= this.noInputs; i++) 
-                value /= this.getInterface("Wej_" + i.toString()).value;
+            oper = 'div';
+        }
+        
+        const sources = [];
+        for (let i = 1; i <= this.noInputs; i++) 
+            sources.push(this.getInterface("Wej_" + i.toString()).value);
+        
+        console.log(sources)
+
+        if (sources.length) {
+            const first = sources[0];
+            const rest = sources.splice(1);
+
+            this.code = `:${label}\n\tcall ${first}\n`;
+            
+            rest.forEach(call => {
+                this.code += `\tcall ${call}\n\tpop #0\n\tpop #1\n\t${oper} #0, #0, #1\n\tpush #0\n`;
+            })
+
+            this.code += `\tret`;
+        } else {
+            this.code = '';
         }
 
-        this.getInterface("Wyj").value = value;
+        this.getInterface("Wyj").value = label;
     }
 }
