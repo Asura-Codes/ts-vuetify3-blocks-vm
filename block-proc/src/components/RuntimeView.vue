@@ -5,9 +5,8 @@ import { compileFromString } from "../utils/compiler";
 import svmasm from "../utils/svmasm";
 import hljs from "highlight.js";
 import CodeEditor from "simple-code-editor/CodeEditor.vue";
-// import VueCommand, { createStdout } from "vue-command";
+import VueCommand, { createStdout } from "vue-command";
 import "vue-command/dist/vue-command.css";
-const VueCommand = require('vue-command');
 
 hljs.registerLanguage("svmasm", svmasm);
 </script>
@@ -245,7 +244,7 @@ export default {
         "run": async () => {
           this.msg = '';
           await this.runProgram();
-          return VueCommand.createStdout(this.msg);
+          return createStdout(this.msg);
         },
       }
     }

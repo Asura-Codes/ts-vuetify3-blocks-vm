@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
     "baseUrl": ".",
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -13,6 +15,7 @@
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
     "noEmit": true,
+    "noImplicitAny": false,
     "paths": {
       "@/*": [
        "src/*"

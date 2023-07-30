@@ -38,7 +38,7 @@ export class Logic extends Node {
 
         const sources = [];
         for (let i = 1; i <= this.noInputs; i++) 
-            sources.push(this.getInterface("Wej_" + i.toString()).value);
+            sources.push(this.getInterface("Wej_" + i.toString()).value as never);
         
         console.log(sources)
         
