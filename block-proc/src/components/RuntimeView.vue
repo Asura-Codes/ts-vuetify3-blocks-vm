@@ -7,6 +7,7 @@ import hljs from "highlight.js";
 import CodeEditor from "simple-code-editor/CodeEditor.vue";
 // import VueCommand, { createStdout } from "vue-command";
 import "vue-command/dist/vue-command.css";
+const VueCommand = require('vue-command');
 
 hljs.registerLanguage("svmasm", svmasm);
 </script>
@@ -133,8 +134,6 @@ hljs.registerLanguage("svmasm", svmasm);
 </style>
 
 <script lang="ts">
-const VueCommand = require('vue-command');
-
 export default {
   data: () => ({
     vm: undefined as VM_t | undefined,
