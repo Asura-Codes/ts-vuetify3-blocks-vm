@@ -16,6 +16,10 @@ export interface VM_t {
     printBinaryInputs: () => void;
     printBinaryOuputs: () => void;
 
+    getVariables: () => Array<number>;
+    setVariables: (b: Array<number>) => void;
+    printVariables: () => void;
+
     print_message: (s: string) => void;
 } 
 

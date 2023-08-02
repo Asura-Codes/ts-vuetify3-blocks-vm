@@ -16,6 +16,8 @@ float ANALOG_OUT[ANALOG_OUT_COUNT];
 uint8_t BINARY_IN[BINARY_IN_COUNT];
 uint8_t BINARY_OUT[BINARY_OUT_COUNT];
 
+struct reg_t VARIABLE_IO[BINARY_IN_COUNT];
+
 
 /**
  * Helper to convert a two-byte value to an integer in the range 0x0000-0xffff
@@ -1350,7 +1352,7 @@ void op_stack_call(struct svm *svm)
 }
 
 /**
- * Store an binary values in a register.
+ * Load an binary values in a register.
  */
 void op_binary_load(struct svm *svm)
 {
@@ -1401,7 +1403,7 @@ void op_binary_save(struct svm *svm)
 }
 
 /**
- * Store an analog value in a register.
+ * Load an analog value in a register.
  */
 void op_analog_load(struct svm *svm)
 {
@@ -1409,7 +1411,7 @@ void op_analog_load(struct svm *svm)
     uint32_t dst = next_byte(svm);
     BOUNDS_TEST_REGISTER(dst);
 
-    /* get the source binary address */
+    /* get the source analog address */
     uint32_t src = next_byte(svm);
     bound_test(svm, src, ANALOG_IN_COUNT);
 
@@ -1436,7 +1438,7 @@ void op_analog_save(struct svm *svm)
     uint32_t src = next_byte(svm);
     BOUNDS_TEST_REGISTER(src);
 
-    /* get the source binary address */
+    /* get the source analog address */
     uint32_t dst = next_byte(svm);
     bound_test(svm, dst, ANALOG_OUT_COUNT);
 
@@ -1448,6 +1450,55 @@ void op_analog_save(struct svm *svm)
         ANALOG_OUT[dst] = svm->registers[src].content.number;
     if (svm->registers[src].type == INTEGER)
         ANALOG_OUT[dst] = svm->registers[src].content.integer;
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+/**
+ * Load an variable value in a register.
+ */
+void op_variable_load(struct svm *svm)
+{
+    /* get the destination register */
+    uint32_t dst = next_byte(svm);
+    BOUNDS_TEST_REGISTER(dst);
+
+    /* get the source binary address */
+    uint32_t src = next_byte(svm);
+    bound_test(svm, src, ANALOG_IN_COUNT);
+
+    if (getenv("DEBUG") != NULL)
+        jsprintf("STORE(Reg%02x will be set to contents of Variable%02x)\n", dst, src);
+
+    /* Free the existing string, if present */
+    clear_string_reg(svm, dst);
+
+    /* storing a variable in register */
+    svm->registers[dst] = VARIABLE_IO[src];
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+/**
+ * Store an register integer value in a binary output.
+ */
+void op_variable_save(struct svm *svm)
+{
+    /* get the destination register */
+    uint32_t src = next_byte(svm);
+    BOUNDS_TEST_REGISTER(src);
+
+    /* get the source binary address */
+    uint32_t dst = next_byte(svm);
+    bound_test(svm, dst, ANALOG_OUT_COUNT);
+
+    if (getenv("DEBUG") != NULL)
+        jsprintf("STORE(Variable%02x will be set to contents of Reg%02x)\n", dst, src);
+
+    /* storing a variable */
+    VARIABLE_IO[dst] = svm->registers[src];
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -1491,6 +1542,8 @@ void opcode_init(svm_t *svm)
     svm->opcodes[BINARY_SAVE] = op_binary_save;
     svm->opcodes[ANALOG_LOAD] = op_analog_load;
     svm->opcodes[ANALOG_SAVE] = op_analog_save;
+    svm->opcodes[VARIABLE_LOAD] = op_variable_load;
+    svm->opcodes[VARIABLE_SAVE] = op_variable_save;
 
     /* jumps */
     svm->opcodes[JUMP_TO] = op_jump_to;

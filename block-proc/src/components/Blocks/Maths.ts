@@ -8,23 +8,23 @@ export class Maths extends Node {
 
     constructor(inputs: number) {
         super();
-        this.type = "Maths";
-        this.name = "Arytmetyka";
+        this.type = "Arithmetic";
+        this.name = "Arithmetic";
         this.code = '';
         this.noInputs = inputs;
         
-        this.addOutputInterface("Wyj");
+        this.addOutputInterface("Out");
         
-        this.addOption("Operacja", "SelectOption", "+", undefined, {
+        this.addOption("Operation", "SelectOption", "+", undefined, {
             items: ['+', '-', '*', '/']
         });
 
         for (let i = 1; i <= this.noInputs; i++) 
-            this.addInputInterface("Wej_" + i.toString())
+            this.addInputInterface("In " + i.toString())
     }
 
     calculate() {
-        const operation = this.getOptionValue("Operacja");
+        const operation = this.getOptionValue("Operation");
         const label = this.id.replaceAll('_', '');
 
         let oper = 'add';
@@ -44,7 +44,7 @@ export class Maths extends Node {
         
         const sources = [];
         for (let i = 1; i <= this.noInputs; i++) 
-            sources.push(this.getInterface("Wej_" + i.toString()).value as never);
+            sources.push(this.getInterface("In " + i.toString()).value as never);
         
         console.log(sources)
 
@@ -55,7 +55,7 @@ export class Maths extends Node {
             this.code = `:${label}\n\tcall ${first}\n`;
             
             rest.forEach(call => {
-                this.code += `\tcall ${call}\n\tpop #0\n\tpop #1\n\t${oper} #0, #0, #1\n\tpush #0\n`;
+                this.code += `\tcall ${call}\n\tpop #1\n\tpop #0\n\t${oper} #0, #0, #1\n\tpush #0\n`;
             })
 
             this.code += `\tret`;
@@ -63,6 +63,6 @@ export class Maths extends Node {
             this.code = '';
         }
 
-        this.getInterface("Wyj").value = label;
+        this.getInterface("Out").value = label;
     }
 }

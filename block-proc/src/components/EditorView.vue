@@ -60,7 +60,7 @@ export default {
                 case 'Logic':
                     node = new Logic(nodeType.count);
                     break;
-                case 'Math':
+                case 'Arithmetic':
                     node = new Maths(nodeType.count);
                     break;
             };
@@ -95,14 +95,14 @@ export default {
             (node2 as any).position.x = 20;
             (node2 as any).position.y = 200;
 
-            node2.setOptionValue("Adres", 1);
+            node2.setOptionValue("Address", 1);
 
             const node3 = new Constant(eConstantValueType.NumberValue);
             this.editor.addNode(node3);
             (node3 as any).position.x = 20;
             (node3 as any).position.y = 380;
             
-            node3.setOptionValue("Wartość", 3);
+            node3.setOptionValue("Value", 3);
 
             const nodeB = new PortIn();
             this.editor.addNode(nodeB);
@@ -133,13 +133,13 @@ export default {
 
             nodeO2.setOptionValue("Type", "BINARY");
 
-            this.editor.addConnection(node1.getInterface("Wyj"), node4.getInterface("Wej_1"))
-            this.editor.addConnection(node2.getInterface("Wyj"), node4.getInterface("Wej_2"))
-            this.editor.addConnection(node3.getInterface("Wyj"), node4.getInterface("Wej_3"))
-            this.editor.addConnection(node4.getInterface("Wyj"), nodeO.getInterface("Wej"))
-            this.editor.addConnection(node3.getInterface("Wyj"), nodeL.getInterface("Wej_1"))
-            this.editor.addConnection(nodeB.getInterface("Wyj"), nodeL.getInterface("Wej_2"))
-            this.editor.addConnection(nodeL.getInterface("Wyj"), nodeO2.getInterface("Wej"))
+            this.editor.addConnection(node1.getInterface("Out"), node4.getInterface("In 1"))
+            this.editor.addConnection(node2.getInterface("Out"), node4.getInterface("In 2"))
+            this.editor.addConnection(node3.getInterface("Out"), node4.getInterface("In 3"))
+            this.editor.addConnection(node4.getInterface("Out"), nodeO.getInterface("In"))
+            this.editor.addConnection(node3.getInterface("Out"), nodeL.getInterface("In 1"))
+            this.editor.addConnection(nodeB.getInterface("Out"), nodeL.getInterface("In 2"))
+            this.editor.addConnection(nodeL.getInterface("Out"), nodeO2.getInterface("In"))
         }
     },
     created() {
@@ -158,8 +158,7 @@ export default {
 
         events.on('addNode', this.addNode);
         events.on('compile', this.compile);
-
-        this.demo();
+        events.on('demo', this.demo);
     }
 }
 </script>

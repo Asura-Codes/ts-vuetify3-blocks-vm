@@ -8,18 +8,18 @@ export class PortIn extends Node {
     constructor() {
         super();
         this.type = "PortIn";
-        this.name = "Port wejściowy";
+        this.name = "Input port";
         this.code = '';
         this.addOption("Type", "SelectOption", "ANALOG", undefined, {
             items: ['ANALOG', 'BINARY']
         });
-        this.addOption("Adres", "IntegerOption", 0, undefined, {min: 0, max: 256});
-        this.addOutputInterface("Wyj");
+        this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
+        this.addOutputInterface("Out");
     }
 
     calculate() {
         const typ = this.getOptionValue("Type");
-        const addr = this.getOptionValue("Adres");
+        const addr = this.getOptionValue("Address");
         const label = this.id.replaceAll('_', '');
         let letter = 'A';
 
@@ -37,6 +37,6 @@ export class PortIn extends Node {
 
         console.log(`PortIn: ${this.code}`);
         
-        this.getInterface("Wyj").value = label;
+        this.getInterface("Out").value = label;
     }
 }

@@ -8,19 +8,19 @@ export class PortOut extends Node {
     constructor() {
         super();
         this.type = "PortOut";
-        this.name = "Port wyjściowy";
+        this.name = "Output port";
         this.code = '';
         this.addOption("Type", "SelectOption", "ANALOG", undefined, {
             items: ['ANALOG', 'BINARY']
         });
-        this.addOption("Adres", "IntegerOption", 0, undefined, {min: 0, max: 256});
-        this.addInputInterface("Wej")
+        this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
+        this.addInputInterface("In")
     }
 
     calculate() {
         const typ = this.getOptionValue("Type");
-        const addr = this.getOptionValue("Adres");
-        let value = this.getInterface("Wej").value;
+        const addr = this.getOptionValue("Address");
+        let value = this.getInterface("In").value;
         let letter = 'A';
 
         switch (typ) {

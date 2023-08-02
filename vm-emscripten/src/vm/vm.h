@@ -51,6 +51,8 @@ enum opcode_t
     BINARY_SAVE,
     ANALOG_LOAD,
     ANALOG_SAVE,
+    VARIABLE_LOAD,
+    VARIABLE_SAVE,
 
     /**
      * Jump operations.
@@ -110,30 +112,6 @@ enum opcode_t
     STACK_POP,
     STACK_RET,
     STACK_CALL
-};
-
-/**
- * Count of registers.
- */
-#define REGISTER_COUNT 10
-#define STACK_COUNT 128
-#define CALL_STACK_COUNT 64
-
-
-/**
- * A single register.
- *
- * Our registers contain a simple union which allows them to store either
- * a string or an integer.
- *
- */
-struct reg_t {
-    union {
-        int integer;
-        float number;
-        char *string;
-    } content;
-    enum { INTEGER, FLOAT, STRING } type;
 };
 
 /**

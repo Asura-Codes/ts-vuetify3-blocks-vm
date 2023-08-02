@@ -14,7 +14,7 @@ export class Constant extends Node {
     constructor(type: eConstantValueType) {
         super();
         this.type = "Constant";
-        this.name = "Stała";
+        this.name = "Constant";
         this.code = '';
         
         this.valueType = eConstantValueType.NumberValue;
@@ -24,21 +24,21 @@ export class Constant extends Node {
             case eConstantValueType.BooleanValue: this.setAsBooleanOption(); break;
         }
         
-        this.addOutputInterface("Wyj");
+        this.addOutputInterface("Out");
     }
 
     setAsNumberOption() {
-        this.addOption("Wartość", "NumberOption", 0);
+        this.addOption("Value", "NumberOption", 0);
         this.valueType = eConstantValueType.NumberValue;
     }
     
     setAsBooleanOption() {
-        this.addOption("Wartość", "CheckboxOption", false);
+        this.addOption("Value", "CheckboxOption", false);
         this.valueType = eConstantValueType.BooleanValue;
     }
 
     calculate() {
-        const value = this.getOptionValue("Wartość");
+        const value = this.getOptionValue("Value");
         const label = this.id.replaceAll('_', '');
 
         console.log(`Constant: ${value}`);
@@ -56,6 +56,6 @@ export class Constant extends Node {
         
         console.log(`Constant: ${this.code}`);
 
-        this.getInterface("Wyj").value = label;
+        this.getInterface("Out").value = label;
     }
 }

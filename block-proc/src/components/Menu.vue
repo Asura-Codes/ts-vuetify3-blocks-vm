@@ -10,17 +10,17 @@
 
     <v-menu>
       <template v-slot:activator="{ props }">
-        <v-btn color="light" v-bind="props"> Porty </v-btn>
+        <v-btn color="light" v-bind="props"> Ports </v-btn>
       </template>
       <v-list>
         <v-list-item value="Source">
           <v-list-item-title @click="onClick('addNode', 'Source')"
-            >Wejście</v-list-item-title
+            >Input</v-list-item-title
           >
         </v-list-item>
         <v-list-item value="Destiny">
           <v-list-item-title @click="onClick('addNode', 'Destiny')"
-            >Wyjście</v-list-item-title
+            >Output</v-list-item-title
           >
         </v-list-item>
       </v-list>
@@ -28,17 +28,17 @@
 
     <v-menu>
       <template v-slot:activator="{ props }">
-        <v-btn color="light" v-bind="props"> Stałe </v-btn>
+        <v-btn color="light" v-bind="props"> Constants </v-btn>
       </template>
       <v-list>
         <v-list-item value="ConstantNumber">
           <v-list-item-title @click="onClick('addNode', 'ConstantNumber')"
-            >Stała float</v-list-item-title
+            >Constant - float</v-list-item-title
           >
         </v-list-item>
         <v-list-item value="ConstantBool">
           <v-list-item-title @click="onClick('addNode', 'ConstantBool')"
-            >Stała bool</v-list-item-title
+            >Constant - bool</v-list-item-title
           >
         </v-list-item>
       </v-list>
@@ -53,7 +53,7 @@
       <v-list>
         <v-list-item v-for="(item, index) in items" :key="index" :value="index">
           <v-list-item-title @click="onClickMenu('addNode', menu.type, item)">{{
-            item
+            `Number of inputs: ${item}`
           }}</v-list-item-title>
         </v-list-item>
       </v-list>
@@ -63,9 +63,17 @@
         class="ma-2"
         x-large
         color="light"
+        @click="onClick('demo', 'program')"
+      >
+        Load DEMO
+      </v-btn>
+      <v-btn
+        class="ma-2"
+        x-large
+        color="light"
         @click="onClick('compile', 'program')"
       >
-        Compile Program
+        Make program
       </v-btn>
     </div>
   </div>
@@ -79,8 +87,8 @@ export default {
     isLoaded: false,
     items: Array.from({ length: 8 }, (_, i) => i + 1),
     operations: [
-      { title: "Logika", type: "Logic" },
-      { title: "Matma", type: "Math" },
+      { title: "Logic", type: "Logic" },
+      { title: "Math", type: "Math" },
     ],
   }),
   methods: {

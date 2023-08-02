@@ -16,6 +16,8 @@ const BINARY_LOAD = 0x08;
 const BINARY_SAVE = 0x09;
 const ANALOG_LOAD = 0x0A;
 const ANALOG_SAVE = 0x0B;
+const VARIABLE_LOAD = 0x0C;
+const VARIABLE_SAVE = 0x0D;
 const JUMP_TO = 0x10;
 const JUMP_Z = 0x11;
 const JUMP_NZ = 0x12;
@@ -68,6 +70,8 @@ cmd     -> "store"i _ address _ "," _ string                      {% function(d)
          | "save"i _ address _ ","  _ adrBins                     {% function(d) { d[0] = BINARY_SAVE; return d.filter(e => e !== null && e !== ','); } %}
          | "load"i _ address _ ","  _ adrAngs                     {% function(d) { d[0] = ANALOG_LOAD; return d.filter(e => e !== null && e !== ','); } %}
          | "save"i _ address _ ","  _ adrAngs                     {% function(d) { d[0] = ANALOG_SAVE; return d.filter(e => e !== null && e !== ','); } %}
+         | "load"i _ address _ ","  _ adrVars                     {% function(d) { d[0] = VARIABLE_LOAD; return d.filter(e => e !== null && e !== ','); } %}
+         | "save"i _ address _ ","  _ adrVars                     {% function(d) { d[0] = VARIABLE_SAVE; return d.filter(e => e !== null && e !== ','); } %}
          | "exit"i                                                {% function(d) { d[0] = EXIT; return d.filter(e => e !== null); } %}
          | "nop"i                                                 {% function(d) { d[0] = NOP_OP; return d.filter(e => e !== null); } %}
          | "print_int"i _ address                                 {% function(d) { d[0] = INT_PRINT; return d.filter(e => e !== null); } %}
@@ -111,6 +115,7 @@ string  -> dqstring             {% function(d) { return d[0]; } %}
 address -> "#" unsigned_int     {% function(d) { return { reg: d[1] }; } %}
 adrAngs -> "@A" unsigned_int    {% function(d) { return { reg: d[1] }; } %}
 adrBins -> "@B" unsigned_int    {% function(d) { return { reg: d[1] }; } %}
+adrVars -> "@V" unsigned_int    {% function(d) { return { reg: d[1] }; } %}
 label   -> [a-zA-Z] [^\\"\n ]:* {% function(d) { return { label: d[0] + d[1].join('') }; } %}
          | "0x"i [a-fA-F0-9]:*  {% function(d) { return parseInt(d[1].join(''), 16); } %}
 number -> "-":? [0-9]:+ "." [0-9]:+ {%

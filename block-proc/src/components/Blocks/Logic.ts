@@ -9,22 +9,22 @@ export class Logic extends Node {
     constructor(inputs: number) {
         super();
         this.type = "Logic";
-        this.name = "Logika";
+        this.name = "Logic";
         this.code = '';
         this.noInputs = inputs;
         
-        this.addOutputInterface("Wyj");
+        this.addOutputInterface("Out");
         
-        this.addOption("Logika", "SelectOption", "AND", undefined, {
+        this.addOption("Logic", "SelectOption", "AND", undefined, {
             items: ["AND", "OR"]
         });
 
         for (let i = 1; i <= this.noInputs; i++) 
-            this.addInputInterface("Wej_" + i.toString())
+            this.addInputInterface("In " + i.toString())
     }
 
     calculate() {
-        const operation = this.getOptionValue("Logika");
+        const operation = this.getOptionValue("Logic");
         const label = this.id.replaceAll('_', '');
 
         let oper = 'add';
@@ -38,7 +38,7 @@ export class Logic extends Node {
 
         const sources = [];
         for (let i = 1; i <= this.noInputs; i++) 
-            sources.push(this.getInterface("Wej_" + i.toString()).value as never);
+            sources.push(this.getInterface("In " + i.toString()).value as never);
         
         console.log(sources)
         
@@ -49,7 +49,7 @@ export class Logic extends Node {
             this.code = `:${label}\n\tcall ${first}\n`;
             
             rest.forEach(call => {
-                this.code += `\tcall ${call}\n\tpop #0\n\tpop #1\n\t${oper} #0, #0, #1\n\tpush #0\n`;
+                this.code += `\tcall ${call}\n\tpop #1\n\tpop #0\n\t${oper} #0, #0, #1\n\tpush #0\n`;
             })
 
             this.code += `\tret`;
@@ -57,21 +57,6 @@ export class Logic extends Node {
             this.code = '';
         }
 
-        // let value = false;
-
-        // console.log(`Logic`);
-        
-        // if (operation === 'AND') {
-        //     value = true;
-        //     for (let i = 1; i <= this.noInputs; i++) 
-        //         value = value && this.getInterface("Wej_" + i.toString()).value > 0;
-        // }
-        // if (operation === 'OR') {
-        //     value = false;
-        //     for (let i = 1; i <= this.noInputs; i++) 
-        //         value = value || this.getInterface("Wej_" + i.toString()).value > 0;
-        // }
-
-        this.getInterface("Wyj").value = label;
+        this.getInterface("Out").value = label;
     }
 }
