@@ -2,6 +2,7 @@ import { Node } from "@baklavajs/core";
 
 export enum eConstantValueType {
     NumberValue = "Number",
+    IntegerValue = "Integer",
     BooleanValue = "Boolean"
 }
 
@@ -21,6 +22,7 @@ export class Constant extends Node {
         
         switch (type) {
             case eConstantValueType.NumberValue: this.setAsNumberOption(); break;
+            case eConstantValueType.IntegerValue: this.setAsIntegerOption(); break;
             case eConstantValueType.BooleanValue: this.setAsBooleanOption(); break;
         }
         
@@ -30,6 +32,11 @@ export class Constant extends Node {
     setAsNumberOption() {
         this.addOption("Value", "NumberOption", 0);
         this.valueType = eConstantValueType.NumberValue;
+    }
+    
+    setAsIntegerOption() {
+        this.addOption("Value", "IntegerOption", false);
+        this.valueType = eConstantValueType.IntegerValue;
     }
     
     setAsBooleanOption() {
@@ -49,6 +56,7 @@ export class Constant extends Node {
                     `:${label}\n\tstore #0, ${parseFloat(value)}\n\tpush #0\n\tret`
                 break;
             case eConstantValueType.BooleanValue: 
+            case eConstantValueType.IntegerValue: 
                 this.code =
                     `:${label}\n\tstore #0, ${parseInt(value)}\n\tpush #0\n\tret`
                 break;

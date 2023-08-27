@@ -16,7 +16,7 @@ export class Logic extends Node {
         this.addOutputInterface("Out");
         
         this.addOption("Logic", "SelectOption", "AND", undefined, {
-            items: ["AND", "OR"]
+            items: ["AND", "OR", "XOR"]
         });
 
         for (let i = 1; i <= this.noInputs; i++) 
@@ -34,6 +34,9 @@ export class Logic extends Node {
         }
         if (operation === 'OR') {
             oper = 'or';
+        }
+        if (operation === 'XOR') {
+            oper = 'xor';
         }
 
         const sources = [];

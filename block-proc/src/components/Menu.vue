@@ -14,14 +14,14 @@
       </template>
       <v-list>
         <v-list-item value="Source">
-          <v-list-item-title @click="onClick('addNode', 'Source')"
-            >Input</v-list-item-title
-          >
+          <v-list-item-title @click="onClickMenu('addNode', 'Source')">
+            Input
+          </v-list-item-title>
         </v-list-item>
         <v-list-item value="Destiny">
-          <v-list-item-title @click="onClick('addNode', 'Destiny')"
-            >Output</v-list-item-title
-          >
+          <v-list-item-title @click="onClickMenu('addNode', 'Destiny')">
+            Output
+          </v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
@@ -31,15 +31,10 @@
         <v-btn color="light" v-bind="props"> Constants </v-btn>
       </template>
       <v-list>
-        <v-list-item value="ConstantNumber">
-          <v-list-item-title @click="onClick('addNode', 'ConstantNumber')"
-            >Constant - float</v-list-item-title
-          >
-        </v-list-item>
-        <v-list-item value="ConstantBool">
-          <v-list-item-title @click="onClick('addNode', 'ConstantBool')"
-            >Constant - bool</v-list-item-title
-          >
+        <v-list-item v-for="(item, index) in constants" :key="index" :value="index">
+          <v-list-item-title @click="onClickMenu('addNode', item.type)">{{
+            `${item.title}`
+          }}</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
@@ -63,7 +58,7 @@
         class="ma-2"
         x-large
         color="light"
-        @click="onClick('demo', 'program')"
+        @click="onClickMenu('demo', 'program')"
       >
         Load DEMO
       </v-btn>
@@ -71,7 +66,7 @@
         class="ma-2"
         x-large
         color="light"
-        @click="onClick('compile', 'program')"
+        @click="onClickMenu('compile', 'program')"
       >
         Make program
       </v-btn>
@@ -81,6 +76,7 @@
 
 <script lang="ts">
 import events from "@/plugins/events";
+import { eConstantValueType } from "./Blocks/Constant";
 
 export default {
   data: () => ({
@@ -90,13 +86,15 @@ export default {
       { title: "Logic", type: "Logic" },
       { title: "Math", type: "Math" },
     ],
+    constants: [
+      { title: "Constant - float", type: eConstantValueType.NumberValue },
+      { title: "Constant - int", type: eConstantValueType.IntegerValue },
+      { title: "Constant - bool", type: eConstantValueType.BooleanValue },
+    ],
   }),
   methods: {
-    onClick(name: string, param: string) {
-      events.emit(name, { type: param });
-    },
-    onClickMenu(name: string, param1: string, param2: number) {
-      events.emit(name, { type: param1, count: param2 });
+    onClickMenu(name: string, param: string, param2?: number) {
+      events.emit(name, { type: param, count: param2 });
     },
   },
   created() {},

@@ -36,5 +36,8 @@ export default defineConfig({
   server: {
     port: 3000
   },
+  build: {
+    cssCodeSplit: false
+  }
   // base: "/ts-vuetify3-baklavajs-blocks-vm/"
 })

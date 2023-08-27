@@ -14,6 +14,7 @@ export class PortIn extends Node {
             items: ['ANALOG', 'BINARY']
         });
         this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
+        this.addOption("Bit", "InputOption", 0, undefined, {min: 0, max: 7});
         this.addOutputInterface("Out");
     }
 

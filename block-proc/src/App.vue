@@ -2,12 +2,16 @@
 import Menu from "@/components/Menu.vue";
 import EditorView from "@/components/EditorView.vue";
 import RuntimeView from "@/components/RuntimeView.vue";
+import DrawflowView from "@/components/DrawflowView.vue";
+import NodeflowView from "@/components/NodeflowView.vue";
 </script>
 
 <template>
   <v-app>
     <v-tabs v-model="tab" bg-color="primary">
       <v-tab value="editor">Node editor</v-tab>
+      <v-tab value="editorDrawflow">DrawFlow editor</v-tab>
+      <v-tab value="editorNodeflow">NodeFlow editor</v-tab>
       <v-tab value="runtime">Runtime (VM)</v-tab>
     </v-tabs>
 
@@ -18,6 +22,18 @@ import RuntimeView from "@/components/RuntimeView.vue";
         </v-toolbar>
         <v-main>
           <EditorView />
+        </v-main>
+      </v-window-item>
+      
+      <v-window-item value="editorDrawflow">
+        <v-main>
+          <DrawflowView />
+        </v-main>
+      </v-window-item>
+      
+      <v-window-item value="editorNodeflow">
+        <v-main>
+          <NodeflowView />
         </v-main>
       </v-window-item>
 
@@ -34,7 +50,7 @@ import events from './plugins/events';
 
 export default {
   data: () => ({
-    tab: "editor",
+    tab: "editorNodeflow",
     code: ''
   }),
   mounted() {

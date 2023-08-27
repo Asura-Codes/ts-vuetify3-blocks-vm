@@ -1,0 +1,45 @@
+<script setup lang="ts">
+import { InputFacade, facade, filter } from "vue-input-facade";
+</script>
+
+<template>
+  <div class="control-p" :title="data.value">
+    <example label="US Phone Number">
+      <InputFacade
+        mask="(###) ### - ####"
+        :value="data.value"
+        :masked="false"
+        @input="change"
+      />
+    </example>
+    <!-- <input :value="data.value" placeholder="edit me" @input="change" /> -->
+    <!-- <v-text-field
+      :value="data.value"
+      @input="change"
+      hide-details
+      single-line
+      type="number"
+    /> -->
+  </div>
+</template>
+
+<script lang="ts">
+export default {
+  data: () => ({}),
+  props: ["data", "emit", "seed"],
+  methods: {
+    change(e) {
+      this.data.setValue(Number(e.target.value));
+    },
+  },
+  watch: {
+    data(v) {
+      // this.value = v.value;
+      console.log(v.value);
+    },
+  },
+  mounted() {
+    console.log(this.data);
+  },
+};
+</script>
