@@ -2,7 +2,7 @@
 import Menu from "@/components/Menu.vue";
 import EditorView from "@/components/EditorView.vue";
 import RuntimeView from "@/components/RuntimeView.vue";
-import DrawflowView from "@/components/DrawflowView.vue";
+// import DrawflowView from "@/components/DrawflowView.vue";
 import NodeflowView from "@/components/NodeflowView.vue";
 </script>
 
@@ -10,7 +10,7 @@ import NodeflowView from "@/components/NodeflowView.vue";
   <v-app>
     <v-tabs v-model="tab" bg-color="primary">
       <v-tab value="editor">Node editor</v-tab>
-      <v-tab value="editorDrawflow">DrawFlow editor</v-tab>
+      <!-- <v-tab value="editorDrawflow">DrawFlow editor</v-tab> -->
       <v-tab value="editorNodeflow">NodeFlow editor</v-tab>
       <v-tab value="runtime">Runtime (VM)</v-tab>
     </v-tabs>
@@ -25,11 +25,11 @@ import NodeflowView from "@/components/NodeflowView.vue";
         </v-main>
       </v-window-item>
       
-      <v-window-item value="editorDrawflow">
+      <!-- <v-window-item value="editorDrawflow">
         <v-main>
           <DrawflowView />
         </v-main>
-      </v-window-item>
+      </v-window-item> -->
       
       <v-window-item value="editorNodeflow">
         <v-main>

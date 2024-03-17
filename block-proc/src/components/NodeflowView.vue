@@ -23,12 +23,12 @@ export default {
   }),
   methods: {},
   async mounted() {
-    setTimeout(() => {
-      if (this.$refs.ed) {
-        const ed = this.$refs.ed as any;
-        ed.createNode('PortIn');
-      }
-    });
+    // setTimeout(() => {
+    //   if (this.$refs.ed) {
+    //     const ed = this.$refs.ed as any;
+    //     ed.createNode('PortIn');
+    //   }
+    // });
   },
   unmounted() {},
 };
