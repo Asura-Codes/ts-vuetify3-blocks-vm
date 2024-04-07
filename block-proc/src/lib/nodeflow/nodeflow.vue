@@ -6,7 +6,7 @@ import node from "./node.vue"
 
 <template>
   <div ref="nodeflow" class="nodeflow parent-nodeflow" tabindex="0">
-    <div ref="nodecanvas" class="nodeflow">
+    <div ref="nodecanvas" class="nodeflow" style="translate: -1000px -1000px; width: 2000px; height: 2000px;">
       <node />
       <node />
     </div>
@@ -37,6 +37,16 @@ export interface NodeDefinition {
 export default {
   data: () => ({
     canvas: document.createElement('div') as HTMLElement,
+    selected: markRaw({
+      action: 'none' as 'none' | 'translate' | 'move' | 'connection',
+      target: undefined as HTMLElement | SVGLineElement | undefined,
+      x_prev: 0,
+      y_prev: 0,
+      x_start: 0,
+      y_start: 0,
+      x_absolute: 0,
+      y_absolute: 0,
+    })
     // d: markRaw({
     //   events: {},
     //   container: undefined as HTMLElement | undefined,
@@ -93,11 +103,114 @@ export default {
     click(e: any) {
       // MouseEvent & TouchEvent
       const target = e.target as HTMLElement | null;
+      const [e_pos_x, e_pos_y] = this.get_xy_from_event(e);
 
-      console.log(target);
+      this.selected.x_start = this.selected.x_prev = e_pos_x;
+      this.selected.y_start = this.selected.y_prev = e_pos_y;
+
+      const canvas = this.$refs.nodecanvas as HTMLElement;
+
+      if (canvas) {
+        const [x, y] = canvas.style.translate.split(' ');
+        this.selected.x_absolute = e_pos_x - parseInt(x);
+        this.selected.y_absolute = e_pos_y - parseInt(y);
+      }
+
+      if (target?.classList.contains('header')) {
+        this.selected.target = target;
+        this.selected.action = 'move';
+      } else
+        if (target?.classList.contains('nodeflow')) {
+          this.selected.target = canvas;
+          this.selected.action = 'translate';
+        } else
+          if (target?.classList.contains('output_handle')) {
+            const [x, y] = [String(this.selected.x_absolute), String(this.selected.y_absolute)];
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            rect.setAttributeNS(null, 'x1', x);
+            rect.setAttributeNS(null, 'y1', y);
+            rect.setAttributeNS(null, 'x2', x);
+            rect.setAttributeNS(null, 'y2', y);
+            rect.setAttributeNS(null, 'fill', 'transparent');
+            rect.setAttributeNS(null, 'stroke', 'white');
+            rect.setAttributeNS(null, 'stroke-width', '2');
+            svg.appendChild(rect);
+            this.selected.target = rect;
+            (this.$refs.nodecanvas as HTMLElement).appendChild(svg);
+            this.selected.action = 'connection';
+          }
+
+      console.log(e.type);
+      console.log(target?.classList);
+      console.log(`click__x: ${e_pos_x} | y: ${e_pos_y}`)
     },
     position(e: any) {
       // MouseEvent & TouchEvent
+      if (this.selected.target) {
+        const [e_pos_x, e_pos_y] = this.get_xy_from_event(e);
+        const [delta_x, delta_y] = [e_pos_x - this.selected.x_prev, e_pos_y - this.selected.y_prev];
+        this.selected.x_prev = e_pos_x;
+        this.selected.y_prev = e_pos_y;
+
+        switch (this.selected.action) {
+          case 'move':
+            const node = this.selected.target.parentElement;
+            if (node) {
+              const [x, y] = node.style.translate.split(' ');
+              node.style.translate = `${parseInt(x) + delta_x}px ${parseInt(y) + delta_y}px`;
+            }
+            break;
+          case 'translate':
+            // const style = window.getComputedStyle(this.selected.target);
+            const [x, y] = this.selected.target.style.translate.split(' ');
+            this.selected.target.style.translate = `${parseInt(x) + delta_x}px ${parseInt(y) + delta_y}px`;
+            break;
+          case 'connection':
+            if (this.selected.target) {
+              const [x, y] = [
+                this.selected.x_absolute - this.selected.x_start + e_pos_x,
+                this.selected.y_absolute - this.selected.y_start + e_pos_y
+              ];
+
+              this.selected.target.setAttributeNS(null, 'x2', String(x));
+              this.selected.target.setAttributeNS(null, 'y2', String(y));
+            }
+            break;
+        }
+
+        // console.log(`x: ${e_pos_x} | y: ${e_pos_y}`)
+        console.log(`dx: ${delta_x} | dy: ${delta_y}`)
+
+      }
+    },
+    dragEnd(e: any) {
+      if (this.selected.target) {
+        const target = this.selected.target;
+        this.selected.target = undefined;
+
+        const [e_pos_x, e_pos_y] = this.get_xy_from_event(e);
+
+        let ele_last: Element | null;
+        if (e.type === "touchend") {
+          ele_last = document.elementFromPoint(e_pos_x, e_pos_y);
+        } else {
+          ele_last = e.target;
+        }
+
+        switch (this.selected.action) {
+          case 'move':
+            const node = target.parentElement;
+            break;
+          case 'translate':
+            break;
+        }
+
+        console.log(`dragEnd__x: ${e_pos_x} | y: ${e_pos_y}`)
+      }
+    },
+    // helpers
+    get_xy_from_event(e: any) {
       let e_pos_x: number;
       let e_pos_y: number;
       if (e.type === "touchmove") {
@@ -108,27 +221,14 @@ export default {
         e_pos_y = e.clientY;
       }
 
-      console.log(`x: ${e_pos_x} | y: ${e_pos_y}`)
-    },
-    dragEnd(e: any) {
-      let e_pos_x: number;
-      let e_pos_y: number;
-      let ele_last: Element | null;
-      if (e.type === "touchend") {
-        e_pos_x = 0;//this.d.mouse_x;
-        e_pos_y = 0;//this.d.mouse_y;
-        ele_last = document.elementFromPoint(e_pos_x, e_pos_y);
-      } else {
-        e_pos_x = e.clientX;
-        e_pos_y = e.clientY;
-        ele_last = e.target;
-      }
+      const view = this.$refs.nodeflow as HTMLElement;
+      const rect = view.getBoundingClientRect();
 
-      console.log(`x: ${e_pos_x} | y: ${e_pos_y}`)
-    },
+      return [e_pos_x - rect.left, e_pos_y - rect.top]
+    }
   },
   mounted() {
-    this.canvas = markRaw(this.$refs.nodecanvas as HTMLElement);
+    this.canvas = markRaw(this.$refs.nodeflow as HTMLElement);
     // if (this.$refs.nodeflow) {
     // this.d.container = this.$refs.nodeflow as HTMLElement;
     // this.d.precanvas = this.$refs.nodecanvas as HTMLElement;

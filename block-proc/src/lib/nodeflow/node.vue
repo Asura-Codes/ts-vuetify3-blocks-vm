@@ -6,7 +6,7 @@ import Input from './Input.vue'
 
 <template>
     <div class="parent-node">
-        <div :id="id" class="nodeflow-node port-in" style="top: 300px; left: 150px;">
+        <div :id="id" class="nodeflow-node port-in" style="translate: 1100px 1100px;">
             <div class="header">
                 dcsdc
             </div>
