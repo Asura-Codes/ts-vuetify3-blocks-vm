@@ -4,28 +4,31 @@ import { fast_uuid } from './uuid';
 </script>
 
 <template>
-    <div class="output">
+    <div class="output" :id="id">
         <div class="output_handle"></div>
         <div class="output_txt">
-            {{ name }}
+            {{ manufacturer.name }}
         </div>
     </div>
 </template>
 
 <script lang="ts">
+export interface OutputConstructor {
+    name: string;
+}
 
 export default {
     data: () => ({
         id: "",
     }),
     props: {
-        name: {
-            type: String,
+        manufacturer: {
+            type: Object as ()=> OutputConstructor,
             required: true
         }
     },
     methods: {},
-    beforeCreate() {
+    created() {
         this.id = fast_uuid()
     },
     mounted() {

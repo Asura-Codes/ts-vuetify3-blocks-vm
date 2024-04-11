@@ -4,17 +4,15 @@ import { fast_uuid } from './uuid';
 </script>
 
 <template>
-    <div class="input" :id="id">
-        <div class="input_handle"></div>
-        <div class="input_txt">
-            {{ manufacturer.name }}
-        </div>
-    </div>
+    <main class="node-component" :id="id">
+        <component :is="manufacturer.type"></component>
+    </main>
 </template>
 
 <script lang="ts">
-export interface InputConstructor {
+export interface ControlConstructor {
     name: string;
+    type: string;
 }
 
 export default {
@@ -23,7 +21,7 @@ export default {
     }),
     props: {
         manufacturer: {
-            type: Object as ()=> InputConstructor,
+            type: Object as ()=> ControlConstructor,
             required: true
         }
     },
@@ -32,6 +30,7 @@ export default {
         this.id = fast_uuid()
     },
     mounted() {
+        
     },
     unmounted() { },
 };
