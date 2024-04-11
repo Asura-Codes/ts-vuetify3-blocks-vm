@@ -23,11 +23,20 @@ export default {
         manufacturer: {
             type: Object as ()=> ControlConstructor,
             required: true
+        },
+        componentsMap: {
+            type: Map,
+            required: true
+        },
+        nodeId: {
+            type: String,
+            required: true
         }
     },
     methods: {},
     created() {
         this.id = fast_uuid()
+        this.componentsMap.set(this.id, this);
     },
     mounted() {
         

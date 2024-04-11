@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { markRaw } from "vue";
+import { fast_uuid } from './uuid';
 import Node, { type NodeConstructor } from "./Node.vue"
+import Output from "./Output.vue";
+import Input from "./Input.vue";
+import Connection, { type ConnectionConstructor } from './Connection.vue'
 </script>
 
 <template>
   <div ref="nodeflow" class="nodeflow parent-nodeflow" tabindex="0">
     <div ref="nodecanvas" class="nodeflow" style="translate: -1000px -1000px; width: 2000px; height: 2000px;">
-      <node v-for="node of nodes" :manufacturer="node"/>
+      <div class="nodes">
+        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" />
+      </div>
+      <div class="connections">
+        <!-- Connections node -->
+        <Connection v-for="params of connections" :manufacturer="params" :components-map="componentsMap" />
+      </div>
     </div>
   </div>
 </template>
@@ -34,23 +44,27 @@ export interface NodeDefinition {
 
 export default {
   data: () => ({
+    id: "",
     canvas: document.createElement('div') as HTMLElement,
     selected: markRaw({
       action: 'none' as 'none' | 'translate' | 'move' | 'connection',
       target: undefined as HTMLElement | SVGLineElement | undefined,
+      targetComponent: undefined as typeof Output | typeof Input | undefined,
       x_prev: 0,
       y_prev: 0,
       x_start: 0,
       y_start: 0,
-      x_absolute: 0,
-      y_absolute: 0,
+      x_event: 0,
+      y_event: 0,
     }),
-    nodes: [] as NodeConstructor[]
+    nodes: [] as NodeConstructor[],
+    connections: [] as ConnectionConstructor[],
+    componentsMap: markRaw(new Map)
   }),
   methods: {
     initialize() {
       this.canvas = markRaw(this.$refs.nodeflow as HTMLElement);
-      
+
       /* Mouse and Touch Actions */
       this.canvas.addEventListener("mouseup", this.dragEnd.bind(this));
       this.canvas.addEventListener("mousemove", (e) => this.position(e));
@@ -67,52 +81,51 @@ export default {
     click(e: MouseEvent | TouchEvent) {
       // MouseEvent & TouchEvent
       const target = e.target as HTMLElement | null;
-      const [e_pos_x, e_pos_y] = this.get_xy_from_event(e);
+      const e_pos_xy = this.get_xy_from_event(e);
+      const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
 
+      this.selected.x_event = e_pos_xy[0];
+      this.selected.y_event = e_pos_xy[1];
       this.selected.x_start = this.selected.x_prev = e_pos_x;
-      this.selected.y_start = this.selected.y_prev = e_pos_y;
+      this.selected.x_start = this.selected.y_prev = e_pos_y;
 
       const canvas = this.$refs.nodecanvas as HTMLElement;
 
-      if (canvas) {
-        const [x, y] = canvas.style.translate.split(' ');
-        this.selected.x_absolute = e_pos_x - parseInt(x);
-        this.selected.y_absolute = e_pos_y - parseInt(y);
-      }
+      // if (canvas) {
+      //   const [x, y] = canvas.style.translate.split(' ');
+      //   this.selected.x_absolute = e_pos_x - parseInt(x);
+      //   this.selected.y_absolute = e_pos_y - parseInt(y);
+      // }
 
       if (target?.classList.contains('header')) {
         this.selected.target = target;
+        this.selected.targetComponent = this.componentsMap.get(target.id);
         this.selected.action = 'move';
       } else
         if (target?.classList.contains('nodeflow')) {
           this.selected.target = canvas;
           this.selected.action = 'translate';
+          const [x, y] = this.selected.target.style.translate.split(' ');
+          this.selected.x_start = parseInt(x);
+          this.selected.x_start = parseInt(y);
         } else
           if (target?.classList.contains('output_handle')) {
-            const [x, y] = [String(this.selected.x_absolute), String(this.selected.y_absolute)];
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            const rect = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            rect.setAttributeNS(null, 'x1', x);
-            rect.setAttributeNS(null, 'y1', y);
-            rect.setAttributeNS(null, 'x2', x);
-            rect.setAttributeNS(null, 'y2', y);
-            rect.setAttributeNS(null, 'fill', 'transparent');
-            rect.setAttributeNS(null, 'stroke', 'white');
-            rect.setAttributeNS(null, 'stroke-width', '2');
-            svg.appendChild(rect);
-            this.selected.target = rect;
-            (this.$refs.nodecanvas as HTMLElement).appendChild(svg);
+            const outputComponent = this.componentsMap.get(target.id);
+            this.startConnection(target.id)
+            this.selected.target = target;
+            this.selected.targetComponent = outputComponent;
             this.selected.action = 'connection';
           }
 
-      console.log(e.type);
-      console.log(target?.classList);
+      // console.log(e.type);
+      // console.log(target?.classList);
       console.log(`click__x: ${e_pos_x} | y: ${e_pos_y}`)
     },
     position(e: MouseEvent | TouchEvent) {
       // MouseEvent & TouchEvent
       if (this.selected.target) {
-        const [e_pos_x, e_pos_y] = this.get_xy_from_event(e);
+        const e_pos_xy = this.get_xy_from_event(e);
+        const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
         const [delta_x, delta_y] = [e_pos_x - this.selected.x_prev, e_pos_y - this.selected.y_prev];
         this.selected.x_prev = e_pos_x;
         this.selected.y_prev = e_pos_y;
@@ -124,27 +137,25 @@ export default {
               const [x, y] = node.style.translate.split(' ');
               node.style.translate = `${parseInt(x) + delta_x}px ${parseInt(y) + delta_y}px`;
             }
+            if (this.selected.targetComponent) {
+              this.selected.targetComponent.move(delta_x, delta_y);
+            }
             break;
           case 'translate':
-            // const style = window.getComputedStyle(this.selected.target);
-            const [x, y] = this.selected.target.style.translate.split(' ');
-            this.selected.target.style.translate = `${parseInt(x) + delta_x}px ${parseInt(y) + delta_y}px`;
+            const x = e_pos_xy[0] - this.selected.x_event + this.selected.x_start;
+            const y = e_pos_xy[1] - this.selected.y_event + this.selected.x_start;
+            this.selected.target.style.translate = `${x.toFixed()}px ${y.toFixed()}px`;
             break;
           case 'connection':
-            if (this.selected.target) {
-              const [x, y] = [
-                this.selected.x_absolute - this.selected.x_start + e_pos_x,
-                this.selected.y_absolute - this.selected.y_start + e_pos_y
-              ];
-
-              this.selected.target.setAttributeNS(null, 'x2', String(x));
-              this.selected.target.setAttributeNS(null, 'y2', String(y));
+            if (this.selected.targetComponent) {
+              const connectionComponent = this.componentsMap.get(this.selected.targetComponent.connectionId());
+              connectionComponent.setEndPoint(e_pos_x, e_pos_y);
             }
             break;
         }
 
         // console.log(`x: ${e_pos_x} | y: ${e_pos_y}`)
-        console.log(`dx: ${delta_x} | dy: ${delta_y}`)
+        // console.log(`dx: ${delta_x} | dy: ${delta_y}`)
 
       }
     },
@@ -153,7 +164,7 @@ export default {
         const target = this.selected.target;
         this.selected.target = undefined;
 
-        const [e_pos_x, e_pos_y] = this.get_xy_from_event(e);
+        const [e_pos_x, e_pos_y] = this.map_point(this.get_xy_from_event(e));
 
         let ele_last: Element | null;
         if (e.type === "touchend") {
@@ -168,13 +179,25 @@ export default {
             break;
           case 'translate':
             break;
+          case 'connection':
+            if (this.selected.targetComponent) {
+              if (ele_last?.classList.contains('input_handle')) {
+                const connectionComponent = this.componentsMap.get(this.selected.targetComponent.connectionId());
+                connectionComponent.setInputId(ele_last.id);
+              } else {
+                this.removeConnection(this.selected.targetComponent.connectionId());
+                this.selected.targetComponent.setConnectionId(undefined);
+              }
+            }
+
+            break;
         }
 
         console.log(`dragEnd__x: ${e_pos_x} | y: ${e_pos_y}`)
       }
     },
     // helpers
-    get_xy_from_event(e: any) {
+    get_xy_from_event(e: any): [number, number] {
       let e_pos_x: number;
       let e_pos_y: number;
       if (e.type === "touchmove") {
@@ -185,33 +208,71 @@ export default {
         e_pos_y = e.clientY;
       }
 
+      return [e_pos_x, e_pos_y];
+    },
+    map_point(xy: [number, number]) {
       const view = this.$refs.nodeflow as HTMLElement;
-      const rect = view.getBoundingClientRect();
+      const canvas = this.$refs.nodecanvas as HTMLElement;
 
-      return [e_pos_x - rect.left, e_pos_y - rect.top]
+      if (view && canvas) {
+        const [x1, y1] = canvas.style.translate.split(' ');
+        const rect = view.getBoundingClientRect();
+        return [xy[0] - parseFloat(x1) - rect.left, xy[1] - parseFloat(y1) - rect.top];
+      }
+
+      return [x, y];
+    },
+    startConnection(outputId: string) {
+      this.connections.push({ outputId })
+
+    },
+    addConnection(outputId: string, inputId: string) {
+      this.connections.push({ outputId, inputId })
+    },
+    removeConnection(connId: string) {
+      const index = this.connections.findIndex(conn => conn.id == connId);
+      this.connections.splice(index, 1);
     }
   },
   mounted() {
+    this.id = fast_uuid();
+    this.componentsMap.set(this.id, this);
+    this.componentsMap.set("canvas", this); // Testowo
     this.initialize();
 
     this.nodes = [
       {
+        title: "Węzeł",
         inputs: [
-            { name: "In1" },
-            { name: "In2" },
-            { name: "In3" },
-            { name: "In4" },
-            { name: "In5" },
+          { name: "In1" },
+          { name: "In2" },
+          { name: "In3" },
+          { name: "In4" },
+          { name: "In5" },
         ],
         outputs: [
-            { name: "Out1" },
-            { name: "Out2" },
+          { name: "Out1" },
+          { name: "Out2" },
         ],
         controls: [
-            { name: "address", type: "v-btn" },
-            { name: "addressBit", type: "v-btn" },
+          { name: "action", type: "v-btn" },
+          { name: "address", type: "v-input" },
+        ]
+      },
+      {
+        title: "Węzeł",
+        inputs: [
+          { name: "In1" },
+          { name: "In2" },
         ],
-        connections: []
+        outputs: [
+          { name: "Out1" },
+          { name: "Out2" },
+        ],
+        controls: [
+          { name: "action", type: "v-btn" },
+          { name: "address", type: "v-input" },
+        ]
       }
     ]
   },
@@ -221,88 +282,88 @@ export default {
 
 
 
-    // if (this.$refs.nodeflow) {
-    // this.d.container = this.$refs.nodeflow as HTMLElement;
-    // this.d.precanvas = this.$refs.nodecanvas as HTMLElement;
-    // /* Context Menu */
-    // this.d.container.addEventListener(
-    //   "contextmenu",
-    //   this.contextmenu.bind(this)
-    // );
-    // /* Delete */
-    // this.d.container.addEventListener("keydown", this.key.bind(this));
+// if (this.$refs.nodeflow) {
+// this.d.container = this.$refs.nodeflow as HTMLElement;
+// this.d.precanvas = this.$refs.nodecanvas as HTMLElement;
+// /* Context Menu */
+// this.d.container.addEventListener(
+//   "contextmenu",
+//   this.contextmenu.bind(this)
+// );
+// /* Delete */
+// this.d.container.addEventListener("keydown", this.key.bind(this));
 
-    // /* Zoom Mouse */
-    // this.d.container.addEventListener("wheel", this.zoom_enter.bind(this), {
-    //   passive: true,
-    // });
-    // /* Update data Nodes */
-    // this.d.container.addEventListener(
-    //   "input_handle",
-    //   this.updateNodeValue.bind(this)
-    // );
+// /* Zoom Mouse */
+// this.d.container.addEventListener("wheel", this.zoom_enter.bind(this), {
+//   passive: true,
+// });
+// /* Update data Nodes */
+// this.d.container.addEventListener(
+//   "input_handle",
+//   this.updateNodeValue.bind(this)
+// );
 
-    // this.d.container.addEventListener("dblclick", this.dblclick.bind(this));
-    // /* Mobile zoom */
-    // this.d.container.onpointerdown = this.pointerdown_handler.bind(this);
-    // this.d.container.onpointermove = this.pointermove_handler.bind(this);
-    // this.d.container.onpointerup = this.pointerup_handler.bind(this);
-    // this.d.container.onpointercancel = this.pointerup_handler.bind(this);
-    // this.d.container.onpointerout = this.pointerup_handler.bind(this);
-    // this.d.container.onpointerleave = this.pointerup_handler.bind(this);
-    // }
+// this.d.container.addEventListener("dblclick", this.dblclick.bind(this));
+// /* Mobile zoom */
+// this.d.container.onpointerdown = this.pointerdown_handler.bind(this);
+// this.d.container.onpointermove = this.pointermove_handler.bind(this);
+// this.d.container.onpointerup = this.pointerup_handler.bind(this);
+// this.d.container.onpointercancel = this.pointerup_handler.bind(this);
+// this.d.container.onpointerout = this.pointerup_handler.bind(this);
+// this.d.container.onpointerleave = this.pointerup_handler.bind(this);
+// }
 
-    // d: markRaw({
-    //   events: {},
-    //   container: undefined as HTMLElement | undefined,
-    //   precanvas: undefined as HTMLElement | undefined,
-    //   nodeId: 1,
-    //   ele_selected: null as HTMLElement | null,
-    //   node_selected: null as HTMLElement | null,
-    //   drag: false,
-    //   reroute: false,
-    //   reroute_fix_curvature: false,
-    //   curvature: 0.5,
-    //   reroute_curvature_start_end: 0.5,
-    //   reroute_curvature: 0.5,
-    //   reroute_width: 6,
-    //   drag_point: false,
-    //   editor_selected: false,
-    //   connection: false,
-    //   connection_ele: null as HTMLElement | SVGSVGElement | null,
-    //   connection_selected: null as HTMLElement | SVGSVGElement | null,
-    //   canvas_x: 0,
-    //   canvas_y: 0,
-    //   pos_x: 0,
-    //   pos_x_start: 0,
-    //   pos_y: 0,
-    //   pos_y_start: 0,
-    //   mouse_x: 0,
-    //   mouse_y: 0,
-    //   line_path: 5,
-    //   first_click: null as HTMLElement | null,
-    //   force_first_input: false,
-    //   draggable_inputs: true,
-    //   useuuid: false,
-    //   parent: parent,
+// d: markRaw({
+//   events: {},
+//   container: undefined as HTMLElement | undefined,
+//   precanvas: undefined as HTMLElement | undefined,
+//   nodeId: 1,
+//   ele_selected: null as HTMLElement | null,
+//   node_selected: null as HTMLElement | null,
+//   drag: false,
+//   reroute: false,
+//   reroute_fix_curvature: false,
+//   curvature: 0.5,
+//   reroute_curvature_start_end: 0.5,
+//   reroute_curvature: 0.5,
+//   reroute_width: 6,
+//   drag_point: false,
+//   editor_selected: false,
+//   connection: false,
+//   connection_ele: null as HTMLElement | SVGSVGElement | null,
+//   connection_selected: null as HTMLElement | SVGSVGElement | null,
+//   canvas_x: 0,
+//   canvas_y: 0,
+//   pos_x: 0,
+//   pos_x_start: 0,
+//   pos_y: 0,
+//   pos_y_start: 0,
+//   mouse_x: 0,
+//   mouse_y: 0,
+//   line_path: 5,
+//   first_click: null as HTMLElement | null,
+//   force_first_input: false,
+//   draggable_inputs: true,
+//   useuuid: false,
+//   parent: parent,
 
-    //   noderegister: {},
-    //   render: undefined as RootRenderFunction<Element | ShadowRoot> | undefined,
-    //   // Configurable options
-    //   module: "Home",
-    //   editor_mode: "edit",
-    //   zoom: 1,
-    //   zoom_max: 1.6,
-    //   zoom_min: 0.5,
-    //   zoom_value: 0.1,
-    //   zoom_last_value: 1,
+//   noderegister: {},
+//   render: undefined as RootRenderFunction<Element | ShadowRoot> | undefined,
+//   // Configurable options
+//   module: "Home",
+//   editor_mode: "edit",
+//   zoom: 1,
+//   zoom_max: 1.6,
+//   zoom_min: 0.5,
+//   zoom_value: 0.1,
+//   zoom_last_value: 1,
 
-    //   // Mobile
-    //   evCache: new Array(),
-    //   prevDiff: -1,
+//   // Mobile
+//   evCache: new Array(),
+//   prevDiff: -1,
 
-    //   data: {},
-    // }),
+//   data: {},
+// }),
 // load() {
 //       // for (const key in this.d.data) {
 //       //     this.addNodeImport(this.d.data[key], this.d.precanvas);

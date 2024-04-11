@@ -4,8 +4,8 @@ import { fast_uuid } from './uuid';
 </script>
 
 <template>
-    <div class="output" :id="id">
-        <div class="output_handle"></div>
+    <div class="output">
+        <div class="output_handle" :id="id" ref="handle"></div>
         <div class="output_txt">
             {{ manufacturer.name }}
         </div>
@@ -15,6 +15,7 @@ import { fast_uuid } from './uuid';
 <script lang="ts">
 export interface OutputConstructor {
     name: string;
+    connectionId?: string;
 }
 
 export default {
@@ -25,11 +26,39 @@ export default {
         manufacturer: {
             type: Object as ()=> OutputConstructor,
             required: true
+        },
+        componentsMap: {
+            type: Map,
+            required: true
+        },
+        nodeId: {
+            type: String,
+            required: true
         }
     },
-    methods: {},
+    methods: {
+        getNodeId() {
+            return this.nodeId;
+        },
+        setConnectionId(connectionId: string) {
+            this.manufacturer.connectionId = connectionId;
+            this.$emit("add-connection", this.manufacturer.connectionId, "output");
+        },
+        connectionId() {
+            return this.manufacturer.connectionId;
+        },
+        center() {
+            const element: HTMLElement = this.$refs.handle as HTMLElement;
+            const rect = element.getBoundingClientRect();
+            const point = [(rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top]
+            const view: any = this.componentsMap.get("canvas") as any;
+                        
+            return view.map_point(point);
+        }
+    },
     created() {
         this.id = fast_uuid()
+        this.componentsMap.set(this.id, this);
     },
     mounted() {
     },
