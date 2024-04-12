@@ -111,11 +111,22 @@ export default {
         } else
           if (target?.classList.contains('output_handle')) {
             const outputComponent = this.componentsMap.get(target.id);
-            this.startConnection(target.id)
-            this.selected.target = target;
-            this.selected.targetComponent = outputComponent;
-            this.selected.action = 'connection';
+            if (outputComponent.connectionId() === undefined) {
+              this.startConnection(target.id)
+              this.selected.targetComponent = outputComponent;
+              this.selected.action = 'connection';
+            }
           }
+      if (target?.classList.contains('input_handle')) {
+        const inputComponent = this.componentsMap.get(target.id);
+        if (inputComponent.connectionId()) {
+          const connectionComponent = this.componentsMap.get(inputComponent.connectionId());
+          inputComponent.setConnectionId(undefined);
+          connectionComponent.clearInputId();
+          this.selected.targetComponent = this.componentsMap.get(connectionComponent.getOutputId());
+          this.selected.action = 'connection';
+        }
+      }
 
       // console.log(e.type);
       // console.log(target?.classList);
@@ -123,15 +134,16 @@ export default {
     },
     position(e: MouseEvent | TouchEvent) {
       // MouseEvent & TouchEvent
-      if (this.selected.target) {
-        const e_pos_xy = this.get_xy_from_event(e);
-        const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
-        const [delta_x, delta_y] = [e_pos_x - this.selected.x_prev, e_pos_y - this.selected.y_prev];
-        this.selected.x_prev = e_pos_x;
-        this.selected.y_prev = e_pos_y;
+      const ele_over = e.target as HTMLElement | null;
+      const e_pos_xy = this.get_xy_from_event(e);
+      const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
+      const [delta_x, delta_y] = [e_pos_x - this.selected.x_prev, e_pos_y - this.selected.y_prev];
+      this.selected.x_prev = e_pos_x;
+      this.selected.y_prev = e_pos_y;
 
-        switch (this.selected.action) {
-          case 'move':
+      switch (this.selected.action) {
+        case 'move':
+          if (this.selected.target) {
             const node = this.selected.target.parentElement;
             if (node) {
               const [x, y] = node.style.translate.split(' ');
@@ -140,61 +152,85 @@ export default {
             if (this.selected.targetComponent) {
               this.selected.targetComponent.move(delta_x, delta_y);
             }
-            break;
-          case 'translate':
+          }
+          break;
+        case 'translate':
+          if (this.selected.target) {
             const x = e_pos_xy[0] - this.selected.x_event + this.selected.x_start;
             const y = e_pos_xy[1] - this.selected.y_event + this.selected.x_start;
             this.selected.target.style.translate = `${x.toFixed()}px ${y.toFixed()}px`;
-            break;
-          case 'connection':
-            if (this.selected.targetComponent) {
-              const connectionComponent = this.componentsMap.get(this.selected.targetComponent.connectionId());
-              connectionComponent.setEndPoint(e_pos_x, e_pos_y);
+          }
+          break;
+        case 'connection':
+          if (this.selected.targetComponent) {
+            const connectionComponent = this.componentsMap.get(this.selected.targetComponent.connectionId());
+            connectionComponent.setEndPoint(e_pos_x, e_pos_y);
+            connectionComponent.incorrectTarget(false)
+                  
+            if (ele_over?.classList.contains('output_handle')) {
+              connectionComponent.incorrectTarget(true)
+            } else 
+            if (ele_over?.classList.contains('input_handle')) {
+              const inputComponent = this.componentsMap.get(ele_over.id);
+              // If there is another connection to input component
+              // Or input is in the same node 
+              if (inputComponent.connectionId() || inputComponent.getNodeId() == this.selected.targetComponent.getNodeId()
+              ) {
+                connectionComponent.incorrectTarget(true)
+              }
             }
-            break;
-        }
-
-        // console.log(`x: ${e_pos_x} | y: ${e_pos_y}`)
-        // console.log(`dx: ${delta_x} | dy: ${delta_y}`)
-
+          }
+          break;
       }
+
+      // console.log(`x: ${e_pos_x} | y: ${e_pos_y}`)
+      // console.log(`dx: ${delta_x} | dy: ${delta_y}`)
     },
     dragEnd(e: MouseEvent | TouchEvent) {
-      if (this.selected.target) {
-        const target = this.selected.target;
-        this.selected.target = undefined;
 
-        const [e_pos_x, e_pos_y] = this.map_point(this.get_xy_from_event(e));
+      const [e_pos_x, e_pos_y] = this.map_point(this.get_xy_from_event(e));
 
-        let ele_last: Element | null;
-        if (e.type === "touchend") {
-          ele_last = document.elementFromPoint(e_pos_x, e_pos_y);
-        } else {
-          ele_last = e.target as Element | null;
-        }
+      let ele_last: Element | null;
+      if (e.type === "touchend") {
+        ele_last = document.elementFromPoint(e_pos_x, e_pos_y);
+      } else {
+        ele_last = e.target as Element | null;
+      }
 
-        switch (this.selected.action) {
-          case 'move':
-            const node = target.parentElement;
-            break;
-          case 'translate':
-            break;
-          case 'connection':
-            if (this.selected.targetComponent) {
-              if (ele_last?.classList.contains('input_handle')) {
+      switch (this.selected.action) {
+        case 'move':
+          this.selected.target = undefined;
+          break;
+        case 'translate':
+          this.selected.target = undefined;
+          break;
+        case 'connection':
+          if (this.selected.targetComponent) {
+            let removeDrawedConnection: boolean = true;
+            if (ele_last?.classList.contains('input_handle')) {
+              const inputComponent = this.componentsMap.get(ele_last.id);
+
+              // If there is no other connections to input component
+              // And input is not in the same node 
+              if (inputComponent.connectionId() === undefined
+                && inputComponent.getNodeId() != this.selected.targetComponent.getNodeId()
+              ) {
                 const connectionComponent = this.componentsMap.get(this.selected.targetComponent.connectionId());
                 connectionComponent.setInputId(ele_last.id);
-              } else {
-                this.removeConnection(this.selected.targetComponent.connectionId());
-                this.selected.targetComponent.setConnectionId(undefined);
+                removeDrawedConnection = false;
               }
             }
 
-            break;
-        }
-
-        console.log(`dragEnd__x: ${e_pos_x} | y: ${e_pos_y}`)
+            if (removeDrawedConnection) {
+              this.removeConnection(this.selected.targetComponent.connectionId());
+              this.selected.targetComponent.setConnectionId(undefined);
+            }
+          }
+          this.selected.targetComponent = undefined;
+          break;
       }
+
+      console.log(`dragEnd__x: ${e_pos_x} | y: ${e_pos_y}`)
     },
     // helpers
     get_xy_from_event(e: any): [number, number] {

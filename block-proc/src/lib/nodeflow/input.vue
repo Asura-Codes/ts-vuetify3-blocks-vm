@@ -40,9 +40,13 @@ export default {
         getNodeId() {
             return this.nodeId;
         },
-        setConnectionId(connectionId: string) {
+        setConnectionId(connectionId?: string) {
+            if (connectionId) {
+                this.$emit("add-connection", connectionId, "input");
+            } else {
+                this.$emit("remove-connection", this.manufacturer.connectionId, "input");
+            }
             this.manufacturer.connectionId = connectionId;
-            this.$emit("add-connection", this.manufacturer.connectionId, "input");
         },
         connectionId() {
             return this.manufacturer.connectionId;

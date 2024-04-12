@@ -9,7 +9,7 @@ import Input, { type InputConstructor } from './Input.vue'
 <template>
     <main class="connection">
         <svg>
-            <line ref="lineHandler" fill="transparent" stroke="white" stroke-width="2" :stroke-dasharray="stroked"></line>
+            <line ref="lineHandler" fill="transparent" :stroke="color" stroke-width="2" :stroke-dasharray="stroked"></line>
         </svg>
     </main>
 </template>
@@ -28,6 +28,7 @@ export default {
             output: undefined as typeof Output | undefined,
             input: undefined as typeof Input | undefined,
         }),
+        color: "white",
         stroked: "4",
     }),
     props: {
@@ -91,6 +92,20 @@ export default {
         setInputId(id: string) {
             this.manufacturer.inputId = id;
             this.initialize();
+        },
+        clearInputId() {
+            this.manufacturer.inputId = undefined;
+            this.initialize();
+        },
+        getOutputId() {
+            return this.manufacturer.outputId;
+        },
+        incorrectTarget(b: boolean) {
+            if (b) {
+                this.color = "red";
+            } else {
+                this.color = "white";
+            }
         }
     },
     mounted() {

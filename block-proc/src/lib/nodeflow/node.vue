@@ -15,7 +15,7 @@ import Connection from './Connection.vue';
         <div class="outputs">
             <!-- Outputs node -->
             <Output v-for="params of manufacturer.outputs" :node-id="id" :manufacturer="params"
-                :components-map="componentsMap" @add-connection="addConnection" />
+                :components-map="componentsMap" @add-connection="addConnection" @remove-connection="removeConnection" />
         </div>
         <div class="nodeflow_content_node">
             <!-- Controls node -->
@@ -25,7 +25,7 @@ import Connection from './Connection.vue';
         <div class="inputs">
             <!-- Inputs node -->
             <Input v-for="params of manufacturer.inputs" :node-id="id" :manufacturer="params"
-                :components-map="componentsMap" @add-connection="addConnection" />
+                :components-map="componentsMap" @add-connection="addConnection" @remove-connection="removeConnection" />
         </div>
     </main>
 </template>
@@ -72,7 +72,7 @@ export default {
                         break;
                 }
             }
-        }
+        },
     },
     created() {
         this.id = fast_uuid()
