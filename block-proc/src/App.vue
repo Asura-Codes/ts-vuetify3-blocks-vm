@@ -32,6 +32,9 @@ import NodeflowView from "@/components/NodeflowView.vue";
       </v-window-item> -->
       
       <v-window-item value="editorNodeflow">
+        <v-toolbar>
+          <Menu />
+        </v-toolbar>
         <v-main>
           <NodeflowView />
         </v-main>

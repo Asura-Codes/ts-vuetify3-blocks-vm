@@ -26,11 +26,12 @@ $color-connection-forbidden: red;
 
 // Background pattern
 $color-pattern-default: #232323;
-$color-pattern-line: #131313;
+$color-pattern-line: #EAEAEA;
 $color-pattern-black: #00000022;
 
 // Interface colors
-$iftypes: ();
+$iftypes: (
+);
 
 // Misc
 $visual-transition: 0.1s linear;
@@ -39,20 +40,52 @@ $visual-transition: 0.1s linear;
 
 
 .parent-nodeflow {
+  width: 100%;
+  height: 100%;
   display: flex;
-  overflow: hidden;
+  position: static;
+  overflow: hidden !important;
   touch-action: none;
-  outline:none;
+  outline: none;
 }
 
 .nodeflow {
   width: 100%;
   height: 100%;
   position: relative;
+  overflow: visible;
+  // outline: none !important;
+  outline: #e7e8eb solid 3px;
   user-select: none;
   perspective: 0;
-  font-family: "Lato","Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+  font-family: "Lato", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   font-size: 13px;
+  padding: 0;
+  margin: 0;
+  background-repeat: no-repeat;
+  box-sizing: inherit;
+  display: block;
+  unicode-bidi: isolate;
+  border: white 1px;
+}
+
+.nodeflow-background {
+  background-color: #232323;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1333333333) 2px, transparent 2px), linear-gradient(90deg, rgba(0, 0, 0, 0.1333333333) 2px, transparent 2px), linear-gradient(#131313 1px, transparent 1px), linear-gradient(90deg, #131313 1px, transparent 1px);
+  background-repeat: repeat;
+  width: 100%;
+  height: 100%;
+  pointer-events: none !important;
+
+  background-position: left 0px top 0px;
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+
+  position: absolute;
+  overflow: hidden;
+  outline: none !important;
+  outline-color: initial !important;
+  outline-style: none !important;
+  outline-width: initial !important;
 }
 
 .nodeflow .parent-node {
@@ -87,14 +120,16 @@ $visual-transition: 0.1s linear;
   box-shadow: 0px 0px 3px $color-control-dark-active;
 }
 
-.nodeflow .nodeflow-node .inputs, .nodeflow .nodeflow-node .outputs {
+.nodeflow .nodeflow-node .inputs,
+.nodeflow .nodeflow-node .outputs {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   // width: 100%;
 }
 
-.nodeflow .nodeflow-node .inputs .input, .nodeflow .nodeflow-node .outputs .output {
+.nodeflow .nodeflow-node .inputs .input,
+.nodeflow .nodeflow-node .outputs .output {
   display: flex;
   // width: 100%;
 }
@@ -106,7 +141,8 @@ $visual-transition: 0.1s linear;
   padding-bottom: 8px;
 }
 
-.nodeflow .nodeflow-node .inputs .input .input_handle, .nodeflow .nodeflow-node .outputs .output .output_handle {
+.nodeflow .nodeflow-node .inputs .input .input_handle,
+.nodeflow .nodeflow-node .outputs .output .output_handle {
 
   position: relative;
   width: 20px;
@@ -124,6 +160,7 @@ $visual-transition: 0.1s linear;
   flex-direction: row;
 
 }
+
 .nodeflow .nodeflow-node .outputs .output {
   flex-direction: row-reverse;
 }
@@ -143,11 +180,13 @@ $visual-transition: 0.1s linear;
   position: absolute;
   overflow: visible !important;
 }
+
 .nodeflow .connection {
   position: absolute;
   pointer-events: none;
   aspect-ratio: 1 / 1;
 }
+
 .nodeflow .connection .main-path {
   fill: none;
   stroke-width: 3px;
@@ -172,7 +211,8 @@ $visual-transition: 0.1s linear;
   pointer-events: all;
 }
 
-.nodeflow .connection .point.selected, .nodeflow .connection .point:hover {
+.nodeflow .connection .point.selected,
+.nodeflow .connection .point:hover {
   fill: #1266ab;
 }
 
@@ -198,7 +238,8 @@ $visual-transition: 0.1s linear;
   font-family: monospace;
   cursor: pointer;
 }
-.nodeflow > .nodeflow-delete {
+
+.nodeflow>.nodeflow-delete {
   margin-left: -15px;
   margin-top: 15px;
 }
@@ -209,7 +250,8 @@ $visual-transition: 0.1s linear;
   top: -15px;
 }
 
-.nodeflow .nodeflow-node .outputs .output .output_handle:hover, .nodeflow .nodeflow-node .inputs .input .input_handle:hover {
+.nodeflow .nodeflow-node .outputs .output .output_handle:hover,
+.nodeflow .nodeflow-node .inputs .input .input_handle:hover {
   background: #494949;
   border: 3px solid white;
 }
@@ -225,6 +267,8 @@ $visual-transition: 0.1s linear;
   background: $color-node-title-background;
 }
 
-.nodeflow .nodeflow-node .nodeflow_content_node input, .nodeflow .nodeflow-node .nodeflow_content_node .el-select, .nodeflow .nodeflow-node .nodeflow_content_node button {
-  width: 100%; 
+.nodeflow .nodeflow-node .nodeflow_content_node input,
+.nodeflow .nodeflow-node .nodeflow_content_node .el-select,
+.nodeflow .nodeflow-node .nodeflow_content_node button {
+  width: 100%;
 }

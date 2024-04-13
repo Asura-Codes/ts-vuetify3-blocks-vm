@@ -8,8 +8,9 @@ import Connection, { type ConnectionConstructor } from './Connection.vue'
 </script>
 
 <template>
-  <div ref="nodeflow" class="nodeflow parent-nodeflow" tabindex="0">
-    <div ref="nodecanvas" class="nodeflow" style="translate: -1000px -1000px; width: 2000px; height: 2000px;">
+  <main ref="nodeflow" class="parent-nodeflow">
+    <div ref="background" class="nodeflow-background" style="background-position: left 0px top 0px;"/>
+    <div ref="nodecanvas" class="nodeflow" style="translate: 0px 0px;">
       <div class="nodes">
         <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" />
       </div>
@@ -18,7 +19,7 @@ import Connection, { type ConnectionConstructor } from './Connection.vue'
         <Connection v-for="params of connections" :manufacturer="params" :components-map="componentsMap" />
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script lang="ts">
@@ -61,6 +62,7 @@ export default {
     connections: [] as ConnectionConstructor[],
     componentsMap: markRaw(new Map)
   }),
+  expose: ['addNode'],
   methods: {
     initialize() {
       this.canvas = markRaw(this.$refs.nodeflow as HTMLElement);
@@ -89,25 +91,18 @@ export default {
       this.selected.x_start = this.selected.x_prev = e_pos_x;
       this.selected.x_start = this.selected.y_prev = e_pos_y;
 
-      const canvas = this.$refs.nodecanvas as HTMLElement;
-
-      // if (canvas) {
-      //   const [x, y] = canvas.style.translate.split(' ');
-      //   this.selected.x_absolute = e_pos_x - parseInt(x);
-      //   this.selected.y_absolute = e_pos_y - parseInt(y);
-      // }
-
       if (target?.classList.contains('header')) {
         this.selected.target = target;
         this.selected.targetComponent = this.componentsMap.get(target.id);
         this.selected.action = 'move';
       } else
         if (target?.classList.contains('nodeflow')) {
+          const canvas = this.$refs.nodecanvas as HTMLElement;
           this.selected.target = canvas;
           this.selected.action = 'translate';
-          const [x, y] = this.selected.target.style.translate.split(' ');
-          this.selected.x_start = parseInt(x);
-          this.selected.x_start = parseInt(y);
+          const [x, y] = canvas.style.translate.split(' ');
+          this.selected.x_start = parseInt(x ?? 0);
+          this.selected.y_start = parseInt(y ?? 0);
         } else
           if (target?.classList.contains('output_handle')) {
             const outputComponent = this.componentsMap.get(target.id);
@@ -133,6 +128,9 @@ export default {
       console.log(`click__x: ${e_pos_x} | y: ${e_pos_y}`)
     },
     position(e: MouseEvent | TouchEvent) {
+      if (this.selected.action == 'none')
+        return
+
       // MouseEvent & TouchEvent
       const ele_over = e.target as HTMLElement | null;
       const e_pos_xy = this.get_xy_from_event(e);
@@ -147,7 +145,7 @@ export default {
             const node = this.selected.target.parentElement;
             if (node) {
               const [x, y] = node.style.translate.split(' ');
-              node.style.translate = `${parseInt(x) + delta_x}px ${parseInt(y) + delta_y}px`;
+              node.style.translate = `${parseInt(x ?? 0) + delta_x}px ${parseInt(y ?? 0) + delta_y}px`;
             }
             if (this.selected.targetComponent) {
               this.selected.targetComponent.move(delta_x, delta_y);
@@ -157,8 +155,10 @@ export default {
         case 'translate':
           if (this.selected.target) {
             const x = e_pos_xy[0] - this.selected.x_event + this.selected.x_start;
-            const y = e_pos_xy[1] - this.selected.y_event + this.selected.x_start;
+            const y = e_pos_xy[1] - this.selected.y_event + this.selected.y_start;
             this.selected.target.style.translate = `${x.toFixed()}px ${y.toFixed()}px`;
+            const background: HTMLElement = this.$refs.background as HTMLElement;
+            background.style.backgroundPosition = `left ${x.toFixed()}px top ${y.toFixed()}px`;
           }
           break;
         case 'connection':
@@ -187,7 +187,6 @@ export default {
       // console.log(`dx: ${delta_x} | dy: ${delta_y}`)
     },
     dragEnd(e: MouseEvent | TouchEvent) {
-
       const [e_pos_x, e_pos_y] = this.map_point(this.get_xy_from_event(e));
 
       let ele_last: Element | null;
@@ -208,7 +207,7 @@ export default {
           if (this.selected.targetComponent) {
             let removeDrawedConnection: boolean = true;
             if (ele_last?.classList.contains('input_handle')) {
-              const inputComponent = this.componentsMap.get(ele_last.id);
+              const inputComponent = this.componentsMap.get(ele_last.id); 
 
               // If there is no other connections to input component
               // And input is not in the same node 
@@ -230,6 +229,7 @@ export default {
           break;
       }
 
+      this.selected.action = 'none';
       console.log(`dragEnd__x: ${e_pos_x} | y: ${e_pos_y}`)
     },
     // helpers
@@ -253,10 +253,10 @@ export default {
       if (view && canvas) {
         const [x1, y1] = canvas.style.translate.split(' ');
         const rect = view.getBoundingClientRect();
-        return [xy[0] - parseFloat(x1) - rect.left, xy[1] - parseFloat(y1) - rect.top];
+        return [xy[0] - parseFloat(x1 ?? 0) - rect.left, xy[1] - parseFloat(y1 ?? 0) - rect.top];
       }
 
-      return [x, y];
+      return [xy[0], xy[1]];
     },
     startConnection(outputId: string) {
       this.connections.push({ outputId })
@@ -268,6 +268,9 @@ export default {
     removeConnection(connId: string) {
       const index = this.connections.findIndex(conn => conn.id == connId);
       this.connections.splice(index, 1);
+    },
+    addNode(node: NodeConstructor) {
+      this.nodes.push(node);
     }
   },
   mounted() {
@@ -292,7 +295,7 @@ export default {
         ],
         controls: [
           { name: "action", type: "v-btn" },
-          { name: "address", type: "v-input" },
+          { name: "address", type: "address-input" },
         ]
       },
       {
@@ -307,7 +310,7 @@ export default {
         ],
         controls: [
           { name: "action", type: "v-btn" },
-          { name: "address", type: "v-input" },
+          { name: "address", type: "address-input" },
         ]
       }
     ]

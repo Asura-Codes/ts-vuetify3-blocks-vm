@@ -37,15 +37,6 @@ export default createVuetify({
     themes: {
       myCustomLightTheme,
     },
-    // defaultTheme: 'dark'
-    // themes: {
-    //   light: {
-    //     colors: {
-    //       primary: '#1867C0',
-    //       secondary: '#5CBBF6',
-    //     },
-    //   },
-    // },
   },
   components: {
     VDataTable, ...components

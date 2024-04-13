@@ -8,7 +8,7 @@ import Connection from './Connection.vue';
 </script>
 
 <template>
-    <main class="nodeflow-node" style="translate: 1100px 1100px;">
+    <main class="nodeflow-node" style="translate: 100px 100px;">
         <div class="header" :id="id">
             {{ manufacturer.title }}
         </div>

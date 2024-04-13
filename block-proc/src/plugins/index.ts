@@ -5,16 +5,18 @@
  */
 
 // Plugins
-import { markRaw } from 'vue'
 import { loadFonts } from './webfontloader'
 import vuetify from './vuetify'
+import { registerNodeflow } from '../lib/nodeflow'
+
 
 // Types
 import type { App } from 'vue'
 
 export function registerPlugins(app: App) {
-  app._context.config.globalProperties.$vuetifyInstance = vuetify; // Problem with drawflow and vuetify
+  // app._context.config.globalProperties.$vuetifyInstance = vuetify; // Problem with drawflow and vuetify
   loadFonts()
   app.use(vuetify)
-  // provide('vuetify:defaults', vuetify);
+
+  registerNodeflow(app);
 }
