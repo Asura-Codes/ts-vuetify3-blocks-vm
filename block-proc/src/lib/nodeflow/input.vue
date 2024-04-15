@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { fast_uuid } from './uuid';
-
+import { NodeConstructor } from './Node.vue';
+import { BaseConstructor } from './definitions';
 </script>
 
 <template>
@@ -13,59 +13,84 @@ import { fast_uuid } from './uuid';
 </template>
 
 <script lang="ts">
-export interface InputConstructor {
+export class InputConstructor extends BaseConstructor {
     name: string;
-    connectionId?: string;
+    connId?: string;
+    element: HTMLElement | undefined;
+
+    constructor(nodeId: string, name: string, connId?: string) {
+        super();
+        this.nodeId = nodeId;
+        this.name = name;
+        this.connId = connId;
+    }
+
+    setConnectionId(connId?: string) {
+        const node: NodeConstructor | undefined = this.getById(this.nodeId) as any;
+        if (node) {
+            if (connId) {
+                node.addConnection(connId, "input")
+                // this.$emit("add-connection", connectionId, "input");
+            } else if (this.connId) {
+                node.removeConnection(this.connId)
+                // this.$emit("remove-connection", this.manufacturer.connectionId, "input");
+            }
+        }
+        this.connId = connId;
+    }
+
+    connectionId() {
+        return this.connId;
+    }
+
+    center() {
+        const element = document.getElementById(this.getId());
+        if (element) {
+            const rect = element.getBoundingClientRect();
+            const point = [(rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top]
+            const view: any = this.getById("canvas") as any;
+
+            return view.map_point(point);
+        }
+    }
 }
 
 export default {
     data: () => ({
-        id: "",
     }),
     props: {
         manufacturer: {
-            type: Object as ()=> InputConstructor,
+            type: InputConstructor,
             required: true
         },
         componentsMap: {
             type: Map,
             required: true
-        },
-        nodeId: {
-            type: String,
-            required: true
         }
     },
     methods: {
-        getNodeId() {
-            return this.nodeId;
-        },
-        setConnectionId(connectionId?: string) {
-            if (connectionId) {
-                this.$emit("add-connection", connectionId, "input");
-            } else {
-                this.$emit("remove-connection", this.manufacturer.connectionId, "input");
-            }
-            this.manufacturer.connectionId = connectionId;
-        },
-        connectionId() {
-            return this.manufacturer.connectionId;
-        },
-        center() {
-            const element: HTMLElement = this.$refs.handle as HTMLElement;
-            const rect = element.getBoundingClientRect();
-            const point = [(rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top]
-            const view: any = this.componentsMap.get("canvas") as any;
-                        
-            return view.map_point(point);
-        }
+
     },
     created() {
-        this.id = fast_uuid()
-        this.componentsMap.set(this.id, this);
+
     },
     mounted() {
+
     },
     unmounted() { },
+    computed: {
+        id() {
+            return String(this.manufacturer.id);
+        },
+    },
+    watch: {
+        manufacturer: {
+            handler(cfg, _) {
+                // console.log(cfg)
+                cfg.element = this.$refs.handle;
+            },
+            deep: true
+        }
+    }
 };
 </script>

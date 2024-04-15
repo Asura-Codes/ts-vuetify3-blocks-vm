@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import NodeFlow from "@/lib/nodeflow/NodeFlow.vue";
 import { NodeConstructor } from '@/lib/nodeflow/Node.vue';
-import { eConstantValueType } from "./Blocks/Constant";
+import { eConstantValueType } from "./BlocksBaklava/Constant";
 </script>
 
 <template>
@@ -38,7 +38,7 @@ export default {
           node = {
             title: "PortIn",
             outputs: [
-              { name: "Out1" },
+              { name: "Out1", connectionId: [] },
             ],
             inputs: [],
             controls: [

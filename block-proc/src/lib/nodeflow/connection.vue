@@ -1,119 +1,195 @@
 <script setup lang="ts">
-import { markRaw } from 'vue';
-import { fast_uuid } from './uuid';
-import Output, { type OutputConstructor } from './Output.vue'
-import Input, { type InputConstructor } from './Input.vue'
-
+import { OutputConstructor } from './Output.vue'
+import { InputConstructor } from './Input.vue'
+import { Ref, ref } from 'vue';
+import { BaseConstructor } from './definitions';
 </script>
 
 <template>
     <main class="connection">
         <svg>
-            <line ref="lineHandler" fill="transparent" :stroke="color" stroke-width="2" :stroke-dasharray="stroked"></line>
+            <line ref="lineHandler" fill="transparent" :x1="x1" :y1="y1" :x2="x2" :y2="y2" :stroke="stroke"
+                :stroke-width="strokeWidth" :stroke-dasharray="strokeDasharray">
+            </line>
         </svg>
     </main>
 </template>
 
 <script lang="ts">
-export interface ConnectionConstructor {
-    id?: string;
+
+export class ConnectionConstructor extends BaseConstructor {
     outputId: string;
-    inputId?: string;
+    inputId: string;
+    line: {
+        color: Ref<string> | any;
+        strokeWidth: Ref<number> | any;
+        strokeDasharray: Ref<string> | any;
+        x1: Ref<number> | any;
+        y1: Ref<number> | any;
+        x2: Ref<number> | any;
+        y2: Ref<number> | any;
+    };
+
+    constructor(outputId: string, inputId?: string) {
+        super();
+        this.outputId = outputId;
+        this.inputId = inputId ?? "";
+        this.line = {
+            color: ref('white'),
+            strokeWidth: ref(2),
+            strokeDasharray: ref('4'),
+            x1: ref(0),
+            y1: ref(0),
+            x2: ref(0),
+            y2: ref(0)
+        };
+    }
+
+    setStartingPoint(x1: number, y1: number) {
+        this.line.x1.value = x1;
+        this.line.y1.value = y1;
+    }
+
+    setEndPoint(x2: number, y2: number) {
+        this.line.x2.value = x2;
+        this.line.y2.value = y2;
+    }
+
+    moveStartBy(x: number, y: number) {
+        this.line.x1.value += x;
+        this.line.y1.value += y;
+    }
+
+    moveEndBy(x: number, y: number) {
+        this.line.x2.value += x;
+        this.line.y2.value += y;
+    }
+
+    incorrectTarget(b: boolean) {
+        if (b) {
+            this.line.color.value = "red";
+        } else {
+            this.line.color.value = "white";
+        }
+    }
+
+    setInputId(id: string) {
+        this.inputId = id;
+    }
+
+    getOutputId() {
+        return this.outputId;
+    }
+
+    getOutput() {
+        return this.getById(this.outputId) as OutputConstructor | undefined;
+    }
+
+    updateStroke() {
+        this.line.strokeDasharray.value = '4';
+        if (this.inputId) {
+            this.line.strokeDasharray.value = '';
+        }
+    }
+
+    redoConnecting() {
+        this.inputId = "";
+        this.updateStroke();
+    }
+
+    repaint() {
+        if (this.outputId) {
+            const output: OutputConstructor = this.getById(this.outputId) as any;
+            output.addConnection(this.getId());
+            const center = output.center();
+            this.setStartingPoint(center[0], center[1]);
+            this.setEndPoint(center[0], center[1]);
+        }
+        if (this.inputId) {
+            const input: InputConstructor = this.getById(this.inputId) as any;
+            input.setConnectionId(this.getId());
+            const center = input.center();
+            this.setEndPoint(center[0], center[1]);
+        }
+    }
 }
+
+export type ConnectionInstance = InstanceType<typeof ConnectionConstructor>;
 
 export default {
     data: () => ({
-        id: "",
-        between: markRaw({
-            output: undefined as typeof Output | undefined,
-            input: undefined as typeof Input | undefined,
-        }),
-        color: "white",
-        stroked: "4",
     }),
     props: {
         manufacturer: {
-            type: Object as ()=> ConnectionConstructor,
+            type: Object as () => ConnectionInstance,
             required: true
         },
         componentsMap: {
             type: Map,
-            required: true
+            required: true,
         }
     },
     methods: {
-        setStartingPoint: function(x1: number, y1: number) {
-            const lineHandler = this.$refs.lineHandler as InstanceType<typeof SVGAElement>
-            lineHandler.setAttributeNS(null, 'x1', String(x1));
-            lineHandler.setAttributeNS(null, 'y1', String(y1));
-        },
-        setEndPoint: function(x2: number, y2: number) {
-            const lineHandler = this.$refs.lineHandler as InstanceType<typeof SVGAElement>
-            lineHandler.setAttributeNS(null, 'x2', String(x2));
-            lineHandler.setAttributeNS(null, 'y2', String(y2));
-        },
-        moveStartBy(x: number, y: number) {
-            const lineHandler = this.$refs.lineHandler as InstanceType<typeof SVGAElement>
-            const x1 = lineHandler.getAttributeNS(null, 'x1');
-            const y1 = lineHandler.getAttributeNS(null, 'y1');
-            if (x1 && y1) {
-                lineHandler.setAttributeNS(null, 'x1', String(parseInt(x1) + x));
-                lineHandler.setAttributeNS(null, 'y1', String(parseInt(y1) + y));
-            }
-        },
-        moveEndBy(x: number, y: number) {
-            const lineHandler = this.$refs.lineHandler as InstanceType<typeof SVGAElement>
-            const x2 = lineHandler.getAttributeNS(null, 'x2');
-            const y2 = lineHandler.getAttributeNS(null, 'y2');
-            if (x2 && y2) {
-                lineHandler.setAttributeNS(null, 'x2', String(parseInt(x2) + x));
-                lineHandler.setAttributeNS(null, 'y2', String(parseInt(y2) + y));
-            }
-        },
         initialize() {
-            this.stroked = '4';
-            if (this.manufacturer.outputId) {
-                const output: typeof Output = this.componentsMap.get(this.manufacturer.outputId) as any;
-                this.between.output = output;
-                output.setConnectionId(this.id);
-                const center = output.center();
-                this.setStartingPoint(center[0], center[1]);
-                this.setEndPoint(center[0], center[1]);
-            }
-            if (this.manufacturer.inputId) {
-                const input: typeof Input = this.componentsMap.get(this.manufacturer.inputId) as any;
-                this.between.input = input;
-                input.setConnectionId(this.id);
-                const center = input.center();
-                this.setEndPoint(center[0], center[1]);
-                this.stroked = "";
-            }
+            // if (this.manufacturer.outputId) {
+            //     const output: OutputConstructor = this.componentsMap.get(this.manufacturer.outputId) as any;
+            //     output.addConnection(this.manufacturer.id);
+            //     const center = output.center();
+            //     this.setStartingPoint(center[0], center[1]);
+            //     this.setEndPoint(center[0], center[1]);
+            // }
+            // if (this.manufacturer.inputId) {
+            //     const input: InputConstructor = this.componentsMap.get(this.manufacturer.inputId) as any;
+            //     input.setConnectionId(this.manufacturer.id);
+            //     const center = input.center();
+            //     this.setEndPoint(center[0], center[1]);
+            //     this.stroked = "";
+            // }
         },
-        setInputId(id: string) {
-            this.manufacturer.inputId = id;
-            this.initialize();
+    },
+    computed: {
+        x1() {
+            return String(this.manufacturer.line.x1);
         },
-        clearInputId() {
-            this.manufacturer.inputId = undefined;
-            this.initialize();
+        y1() {
+            return String(this.manufacturer.line.y1);
         },
-        getOutputId() {
-            return this.manufacturer.outputId;
+        x2() {
+            return String(this.manufacturer.line.x2);
         },
-        incorrectTarget(b: boolean) {
-            if (b) {
-                this.color = "red";
-            } else {
-                this.color = "white";
-            }
+        y2() {
+            return String(this.manufacturer.line.y2);
+        },
+        stroke() {
+            return String(this.manufacturer.line.color);
+        },
+        strokeWidth() {
+            return String(this.manufacturer.line.strokeWidth);
+        },
+        strokeDasharray() {
+            return String(this.manufacturer.line.strokeDasharray);
         }
     },
     mounted() {
-        this.id = fast_uuid()
-        this.componentsMap.set(this.id, this);
-        this.manufacturer.id = this.id;
         this.initialize();
     },
-    unmounted() { },
+    unmounted() {
+        // if (this.manufacturer.outputId) {
+        //     const output: typeof Output = this.componentsMap.get(this.manufacturer.outputId) as any;
+        //     output.removeConnection(this.id);
+        // }
+        // if (this.manufacturer.inputId) {
+        //     const input: typeof Input = this.componentsMap.get(this.manufacturer.inputId) as any;
+        //     input.setConnectionId(undefined);
+        // }
+    },
+    watch: {
+        manufacturer: {
+            handler(cfg, _) {
+                // console.log(cfg)
+            },
+            deep: true
+        }
+    }
 };
 </script>

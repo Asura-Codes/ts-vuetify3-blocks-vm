@@ -1,68 +1,94 @@
 <script setup lang="ts">
-import { fast_uuid } from './uuid';
-import Output, { type OutputConstructor } from './Output.vue'
-import Input, { type InputConstructor } from './Input.vue'
-import Control, { type ControlConstructor } from './Control.vue'
-import { markRaw } from 'vue';
-import Connection from './Connection.vue';
+import Output, { OutputConstructor } from './Output.vue'
+import Input, { InputConstructor } from './Input.vue'
+import Control, { ControlConstructor } from './Control.vue'
+import { Ref, ref } from 'vue';
+import { ConnectionConstructor } from './Connection.vue';
+import { BaseConstructor, RootMap } from './definitions';
 </script>
 
 <template>
-    <main class="nodeflow-node" style="translate: 100px 100px;">
+    <main class="nodeflow-node" :style="translate">
         <div class="header" :id="id">
             {{ manufacturer.title }}
         </div>
         <div class="outputs">
             <!-- Outputs node -->
-            <Output v-for="params of manufacturer.outputs" :node-id="id" :manufacturer="params"
-                :components-map="componentsMap" @add-connection="addConnection" @remove-connection="removeConnection" />
+            <Output v-for="params of manufacturer.outputs" :manufacturer="params"
+                :components-map="componentsMap" />
         </div>
         <div class="nodeflow_content_node">
             <!-- Controls node -->
-            <Control v-for="params of manufacturer.controls" :node-id="id" :manufacturer="params"
+            <Control v-for="params of manufacturer.controls" :manufacturer="params"
                 :components-map="componentsMap" />
         </div>
         <div class="inputs">
             <!-- Inputs node -->
-            <Input v-for="params of manufacturer.inputs" :node-id="id" :manufacturer="params"
-                :components-map="componentsMap" @add-connection="addConnection" @remove-connection="removeConnection" />
+            <Input v-for="params of manufacturer.inputs" :manufacturer="params"
+                :components-map="componentsMap" />
         </div>
     </main>
 </template>
 
 <script lang="ts">
-export interface NodeConstructor {
+export class NodeConstructor extends BaseConstructor {
     title: string;
     outputs: OutputConstructor[];
     inputs: InputConstructor[];
     controls: ControlConstructor[];
-}
+    connections: Map<string, 'input' | 'output'>;
+    translate: { x: Ref<number> | number, y: Ref<number> | number };
 
-export default {
-    data: () => ({
-        id: "",
-        connections: markRaw(new Map<string, 'input' | 'output'>),
-    }),
-    props: {
-        manufacturer: {
-            type: Object as () => NodeConstructor,
-            required: true
-        },
-        componentsMap: {
-            type: Map,
-            required: true
+    constructor(title: string, inputs?: InputConstructor[], outputs?: OutputConstructor[], controls?: ControlConstructor[]) {
+        super();
+        this.title = title;
+        this.outputs = outputs ?? [];
+        this.inputs = inputs ?? [];
+        this.controls = controls ?? [];
+        this.connections = new Map<string, 'input' | 'output'>;
+        this.translate = { x: ref(0), y: ref(0) };
+    }
+
+    setNodeflow(root: RootMap) {
+        super.setNodeflow(root);
+
+        for (const obj of this.outputs) {
+            obj.setNodeflow(root);
         }
-    },
-    methods: {
-        addConnection(connId: string, type: 'input' | 'output') {
-            this.connections.set(connId, type);
-        },
-        removeConnection(connId: string) {
-            this.connections.delete(connId);
-        },
-        move(dx: number, dy: number) {
-            for (const connection of this.connections.entries()) {
-                const connectionComponent: typeof Connection = this.componentsMap.get(connection[0]) as any;
+        for (const obj of this.inputs) {
+            obj.setNodeflow(root);
+        }
+        for (const obj of this.controls) {
+            obj.setNodeflow(root);
+        }
+    }
+
+    addInput(name: string) {
+        this.inputs.push(new InputConstructor(this.getId(), name))
+    }
+
+    addOutput(name: string) {
+        this.outputs.push(new OutputConstructor(this.getId(), name))
+    }
+
+    addControl(name: string, type: string) {
+        this.controls.push(new ControlConstructor(this.getId(), name, type))
+    }
+
+    addConnection(connId: string, type: 'input' | 'output') {
+        this.connections.set(connId, type);
+    }
+
+    removeConnection(connId: string) {
+        this.connections.delete(connId);
+    }
+
+    move(dx: number, dy: number) {
+        this.translate.x.value += dx;
+        this.translate.y.value += dy;
+        for (const connection of this.connections.entries()) {
+            const connectionComponent: ConnectionConstructor | undefined = this.getById(connection[0]) as ConnectionConstructor | undefined;
+            if (connectionComponent) {
                 switch (connection[1]) {
                     case 'input':
                         connectionComponent.moveEndBy(dx, dy);
@@ -72,20 +98,49 @@ export default {
                         break;
                 }
             }
+        }
+    }
+
+}
+
+export type NodeInstance = InstanceType<typeof NodeConstructor>;
+
+export default {
+    data: () => ({
+    }),
+    props: {
+        manufacturer: {
+            type: Object as () => NodeInstance,
+            required: true
         },
+        componentsMap: {
+            type: Map,
+            required: true
+        }
+    },
+    methods: {
     },
     created() {
-        this.id = fast_uuid()
-        this.componentsMap.set(this.id, this);
     },
     mounted() {
 
     },
     unmounted() { },
-    components: {
-        Output,
-        Input,
-        Control,
+    computed: {
+        id() {
+            return String(this.manufacturer.id);
+        },
+        translate() {
+            return `translate: ${this.manufacturer.translate.x}px ${this.manufacturer.translate.y}px`
+        }
+    },
+    watch: {
+        manufacturer: {
+            handler(cfg, _) {
+                
+            },
+            deep: true
+        }
     }
 };
 </script>

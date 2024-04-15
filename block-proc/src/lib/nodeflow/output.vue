@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { fast_uuid } from './uuid';
-
+import { NodeConstructor } from './Node.vue';
+import { BaseConstructor } from './definitions';
 </script>
 
 <template>
@@ -13,59 +13,94 @@ import { fast_uuid } from './uuid';
 </template>
 
 <script lang="ts">
-export interface OutputConstructor {
+export class OutputConstructor extends BaseConstructor {
     name: string;
-    connectionId?: string;
+    connectionId: string[];
+
+    constructor(nodeId: string, name: string, connectionId?: string[]) {
+        super();
+        this.nodeId = nodeId;
+        this.name = name;
+        this.connectionId = connectionId ?? [];
+    }
+
+    addConnection(connectionId: string) {
+        const index = this.connectionId.indexOf(connectionId);
+        if (index == -1) {
+            this.connectionId.push(connectionId);
+            const node: NodeConstructor | undefined = this.getById(this.nodeId) as any;
+            if (node) {
+                node.addConnection(connectionId, "output")
+                // this.$emit("add-connection", connectionId, "output");
+            }
+        } else {
+            this.connectionId.splice(index, 1);
+            this.connectionId.push(connectionId);
+        }
+    }
+
+    removeConnection(connectionId: string) {
+        const index = this.connectionId.indexOf(connectionId);
+        if (index != -1) {
+            const deleted = this.connectionId.splice(index, 1);
+            const node: NodeConstructor | undefined = this.getById(this.nodeId) as any;
+            if (node && deleted) {
+                node.addConnection(deleted[0], "output")
+                // this.$emit("remove-connection", this.connectionId, "output");
+            }
+        }
+    }
+    lastConnectionId() {
+        return this.connectionId.at(-1);
+    }
+
+    center() {
+        const element = document.getElementById(this.id.value);
+        if (element) {
+            const rect = element.getBoundingClientRect();
+            const point = [(rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top]
+            const view: any = this.getById("canvas") as any;
+
+            return view.map_point(point);
+        }
+    }
 }
 
 export default {
     data: () => ({
-        id: "",
     }),
     props: {
         manufacturer: {
-            type: Object as ()=> OutputConstructor,
+            type: OutputConstructor,
             required: true
         },
         componentsMap: {
             type: Map,
             required: true
-        },
-        nodeId: {
-            type: String,
-            required: true
         }
     },
     methods: {
-        getNodeId() {
-            return this.nodeId;
-        },
-        setConnectionId(connectionId?: string) {
-            if (connectionId) {
-                this.$emit("add-connection", connectionId, "output");
-            } else {
-                this.$emit("remove-connection", this.manufacturer.connectionId, "output");
-            }
-            this.manufacturer.connectionId = connectionId;
-        },
-        connectionId() {
-            return this.manufacturer.connectionId;
-        },
-        center() {
-            const element: HTMLElement = this.$refs.handle as HTMLElement;
-            const rect = element.getBoundingClientRect();
-            const point = [(rect.right - rect.left) / 2 + rect.left, (rect.bottom - rect.top) / 2 + rect.top]
-            const view: any = this.componentsMap.get("canvas") as any;
-                        
-            return view.map_point(point);
-        }
+
     },
     created() {
-        this.id = fast_uuid()
-        this.componentsMap.set(this.id, this);
+
     },
     mounted() {
+
     },
     unmounted() { },
+    computed: {
+        id() {
+            return String(this.manufacturer.id);
+        },
+    },
+    watch: {
+        manufacturer: {
+            handler(cfg, _) {
+                // console.log(cfg)
+            },
+            deep: true
+        }
+    }
 };
 </script>

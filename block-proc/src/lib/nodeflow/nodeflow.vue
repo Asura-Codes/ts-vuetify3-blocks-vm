@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { markRaw } from "vue";
 import { fast_uuid } from './uuid';
-import Node, { type NodeConstructor } from "./Node.vue"
-import Output from "./Output.vue";
-import Input from "./Input.vue";
-import Connection, { type ConnectionConstructor } from './Connection.vue'
+import Node, { NodeConstructor, NodeInstance } from "./Node.vue"
+import { OutputConstructor } from "./Output.vue";
+import { InputConstructor } from "./Input.vue";
+import Connection, { ConnectionConstructor, ConnectionInstance } from './Connection.vue'
 </script>
 
 <template>
   <main ref="nodeflow" class="parent-nodeflow">
-    <div ref="background" class="nodeflow-background" style="background-position: left 0px top 0px;"/>
-    <div ref="nodecanvas" class="nodeflow" style="translate: 0px 0px;">
+    <div ref="background" class="nodeflow-background" :style="translateBackground" />
+    <div ref="nodecanvas" class="nodeflow" :style="translateCanvas">
       <div class="nodes">
         <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" />
       </div>
@@ -46,11 +46,11 @@ export interface NodeDefinition {
 export default {
   data: () => ({
     id: "",
-    canvas: document.createElement('div') as HTMLElement,
+    canvas: markRaw(document.createElement('div')) as HTMLElement,
     selected: markRaw({
       action: 'none' as 'none' | 'translate' | 'move' | 'connection',
       target: undefined as HTMLElement | SVGLineElement | undefined,
-      targetComponent: undefined as typeof Output | typeof Input | undefined,
+      component: undefined as NodeConstructor | OutputConstructor | InputConstructor | ConnectionConstructor | undefined,
       x_prev: 0,
       y_prev: 0,
       x_start: 0,
@@ -58,9 +58,10 @@ export default {
       x_event: 0,
       y_event: 0,
     }),
-    nodes: [] as NodeConstructor[],
-    connections: [] as ConnectionConstructor[],
-    componentsMap: markRaw(new Map)
+    nodes: new Array<NodeInstance>(),
+    connections: new Array<ConnectionInstance>(),
+    componentsMap: markRaw(new Map<string, NodeConstructor | OutputConstructor | InputConstructor | ConnectionConstructor>),
+    translate: { x: 0, y: 0 },
   }),
   expose: ['addNode'],
   methods: {
@@ -81,6 +82,9 @@ export default {
       });
     },
     click(e: MouseEvent | TouchEvent) {
+      if (this.selected.action != 'none')
+        return
+
       // MouseEvent & TouchEvent
       const target = e.target as HTMLElement | null;
       const e_pos_xy = this.get_xy_from_event(e);
@@ -93,33 +97,31 @@ export default {
 
       if (target?.classList.contains('header')) {
         this.selected.target = target;
-        this.selected.targetComponent = this.componentsMap.get(target.id);
+        this.selected.component = this.componentsMap.get(target.id);
         this.selected.action = 'move';
       } else
         if (target?.classList.contains('nodeflow')) {
-          const canvas = this.$refs.nodecanvas as HTMLElement;
-          this.selected.target = canvas;
           this.selected.action = 'translate';
-          const [x, y] = canvas.style.translate.split(' ');
-          this.selected.x_start = parseInt(x ?? 0);
-          this.selected.y_start = parseInt(y ?? 0);
+          this.selected.x_start = Number(this.translate.x);
+          this.selected.y_start = Number(this.translate.y);
         } else
           if (target?.classList.contains('output_handle')) {
-            const outputComponent = this.componentsMap.get(target.id);
-            if (outputComponent.connectionId() === undefined) {
-              this.startConnection(target.id)
-              this.selected.targetComponent = outputComponent;
+            this.selected.component = this.startConnection(target.id);
+            this.selected.action = 'connection';
+          }
+      if (target?.classList.contains('input_handle')) {
+        const inputComponent: InputConstructor | undefined = this.componentsMap.get(target.id) as InputConstructor | undefined;
+        if (inputComponent) {
+          const connId = inputComponent.connectionId();
+          if (connId) {
+            const connectionComponent: ConnectionConstructor | undefined = this.componentsMap.get(connId) as any;
+            inputComponent.setConnectionId(undefined);
+            if (connectionComponent) {
+              connectionComponent.redoConnecting();
+              this.selected.component = connectionComponent;
               this.selected.action = 'connection';
             }
           }
-      if (target?.classList.contains('input_handle')) {
-        const inputComponent = this.componentsMap.get(target.id);
-        if (inputComponent.connectionId()) {
-          const connectionComponent = this.componentsMap.get(inputComponent.connectionId());
-          inputComponent.setConnectionId(undefined);
-          connectionComponent.clearInputId();
-          this.selected.targetComponent = this.componentsMap.get(connectionComponent.getOutputId());
-          this.selected.action = 'connection';
         }
       }
 
@@ -141,44 +143,38 @@ export default {
 
       switch (this.selected.action) {
         case 'move':
-          if (this.selected.target) {
-            const node = this.selected.target.parentElement;
+          if (this.selected.component) {
+            const node: NodeConstructor | undefined = this.selected.component as any;
             if (node) {
-              const [x, y] = node.style.translate.split(' ');
-              node.style.translate = `${parseInt(x ?? 0) + delta_x}px ${parseInt(y ?? 0) + delta_y}px`;
-            }
-            if (this.selected.targetComponent) {
-              this.selected.targetComponent.move(delta_x, delta_y);
+              node.move(delta_x, delta_y);
             }
           }
           break;
         case 'translate':
-          if (this.selected.target) {
-            const x = e_pos_xy[0] - this.selected.x_event + this.selected.x_start;
-            const y = e_pos_xy[1] - this.selected.y_event + this.selected.y_start;
-            this.selected.target.style.translate = `${x.toFixed()}px ${y.toFixed()}px`;
-            const background: HTMLElement = this.$refs.background as HTMLElement;
-            background.style.backgroundPosition = `left ${x.toFixed()}px top ${y.toFixed()}px`;
-          }
+          this.translate.x = e_pos_xy[0] - this.selected.x_event + this.selected.x_start;
+          this.translate.y = e_pos_xy[1] - this.selected.y_event + this.selected.y_start;
           break;
         case 'connection':
-          if (this.selected.targetComponent) {
-            const connectionComponent = this.componentsMap.get(this.selected.targetComponent.connectionId());
-            connectionComponent.setEndPoint(e_pos_x, e_pos_y);
-            connectionComponent.incorrectTarget(false)
-                  
+          if (this.selected.component) {
+            const connection: ConnectionConstructor = this.selected.component as ConnectionConstructor;
+            connection.setEndPoint(e_pos_x, e_pos_y);
+            connection.incorrectTarget(false)
+
             if (ele_over?.classList.contains('output_handle')) {
-              connectionComponent.incorrectTarget(true)
-            } else 
-            if (ele_over?.classList.contains('input_handle')) {
-              const inputComponent = this.componentsMap.get(ele_over.id);
-              // If there is another connection to input component
-              // Or input is in the same node 
-              if (inputComponent.connectionId() || inputComponent.getNodeId() == this.selected.targetComponent.getNodeId()
-              ) {
-                connectionComponent.incorrectTarget(true)
+              connection.incorrectTarget(true)
+            } else
+              if (ele_over?.classList.contains('input_handle')) {
+                const inputComponent: InputConstructor | undefined = this.componentsMap.get(ele_over.id) as InputConstructor | undefined;
+                const outputComponent: OutputConstructor | undefined = (this.selected.component as ConnectionConstructor).getOutput();
+                // If there is another connection to input component
+                // Or input is in the same node 
+                if (inputComponent && outputComponent) {
+                  if (inputComponent.connectionId() || inputComponent.nodeId == outputComponent.nodeId
+                  ) {
+                    connection.incorrectTarget(true)
+                  }
+                }
               }
-            }
           }
           break;
       }
@@ -204,28 +200,32 @@ export default {
           this.selected.target = undefined;
           break;
         case 'connection':
-          if (this.selected.targetComponent) {
+          if (this.selected.component) {
             let removeDrawedConnection: boolean = true;
             if (ele_last?.classList.contains('input_handle')) {
-              const inputComponent = this.componentsMap.get(ele_last.id); 
+              const inputComponent: InputConstructor | undefined = this.componentsMap.get(ele_last.id) as any;
+              const outputComponent: OutputConstructor | undefined = (this.selected.component as ConnectionConstructor).getOutput();
 
               // If there is no other connections to input component
               // And input is not in the same node 
-              if (inputComponent.connectionId() === undefined
-                && inputComponent.getNodeId() != this.selected.targetComponent.getNodeId()
-              ) {
-                const connectionComponent = this.componentsMap.get(this.selected.targetComponent.connectionId());
-                connectionComponent.setInputId(ele_last.id);
-                removeDrawedConnection = false;
+              if (inputComponent && outputComponent) {
+                if (inputComponent.connectionId() === undefined
+                  && inputComponent.nodeId != outputComponent.nodeId
+                ) {
+                  const connectionComponent: ConnectionConstructor = this.selected.component as any;
+                  connectionComponent.setInputId(ele_last.id);
+                  connectionComponent.repaint();
+                  connectionComponent.updateStroke();
+                  removeDrawedConnection = false;
+                }
               }
             }
 
             if (removeDrawedConnection) {
-              this.removeConnection(this.selected.targetComponent.connectionId());
-              this.selected.targetComponent.setConnectionId(undefined);
+              this.removeConnection(this.selected.component.getId());
             }
           }
-          this.selected.targetComponent = undefined;
+          this.selected.component = undefined;
           break;
       }
 
@@ -248,72 +248,103 @@ export default {
     },
     map_point(xy: [number, number]) {
       const view = this.$refs.nodeflow as HTMLElement;
-      const canvas = this.$refs.nodecanvas as HTMLElement;
 
-      if (view && canvas) {
-        const [x1, y1] = canvas.style.translate.split(' ');
+      if (view) {
         const rect = view.getBoundingClientRect();
-        return [xy[0] - parseFloat(x1 ?? 0) - rect.left, xy[1] - parseFloat(y1 ?? 0) - rect.top];
+        return [xy[0] - this.translate.x - rect.left, xy[1] - this.translate.y - rect.top];
       }
 
       return [xy[0], xy[1]];
     },
-    startConnection(outputId: string) {
-      this.connections.push({ outputId })
-
+    startConnection(outputId: string): ConnectionConstructor {
+      const newConnection = new ConnectionConstructor(outputId);
+      newConnection.setNodeflow(this.componentsMap);
+      this.connections.push(newConnection);
+      newConnection.repaint()
+      return newConnection;
     },
     addConnection(outputId: string, inputId: string) {
-      this.connections.push({ outputId, inputId })
+      const newConnection = new ConnectionConstructor(outputId, inputId);
+      newConnection.setNodeflow(this.componentsMap);
+      this.connections.push(newConnection);
+      return newConnection;
     },
     removeConnection(connId: string) {
       const index = this.connections.findIndex(conn => conn.id == connId);
       this.connections.splice(index, 1);
     },
     addNode(node: NodeConstructor) {
+      node.setNodeflow(this.componentsMap);
       this.nodes.push(node);
     }
   },
+  computed: {
+    translateCanvas() {
+      return `translate: ${this.translate.x}px ${this.translate.y}px`
+    },
+    translateBackground() {
+      return `background-position: left ${this.translate.x}px top ${this.translate.y}px;`
+    },
+  },
   mounted() {
     this.id = fast_uuid();
-    this.componentsMap.set(this.id, this);
-    this.componentsMap.set("canvas", this); // Testowo
+    this.componentsMap.set("canvas", this as any); // Testowo
     this.initialize();
 
-    this.nodes = [
-      {
-        title: "Węzeł",
-        inputs: [
-          { name: "In1" },
-          { name: "In2" },
-          { name: "In3" },
-          { name: "In4" },
-          { name: "In5" },
-        ],
-        outputs: [
-          { name: "Out1" },
-          { name: "Out2" },
-        ],
-        controls: [
-          { name: "action", type: "v-btn" },
-          { name: "address", type: "address-input" },
-        ]
-      },
-      {
-        title: "Węzeł",
-        inputs: [
-          { name: "In1" },
-          { name: "In2" },
-        ],
-        outputs: [
-          { name: "Out1" },
-          { name: "Out2" },
-        ],
-        controls: [
-          { name: "action", type: "v-btn" },
-          { name: "address", type: "address-input" },
-        ]
-      }
-    ]
+    let node = new NodeConstructor("Węzeł 1");
+
+    node.addInput("In1")
+    node.addInput("In2")
+    node.addOutput("Out1")
+    node.addOutput("Out2")
+
+    this.addNode(node);
+
+    node = new NodeConstructor("Węzeł 2");
+    node.addInput("In1")
+    node.addInput("In2")
+    node.addInput("In3")
+    node.addOutput("Out1")
+    node.addOutput("Out2")
+    node.addOutput("Out3")
+
+    this.addNode(node);
+
+    // this.nodes = [
+    //   {
+    //     title: "Węzeł",
+    //     inputs: [
+    //       { name: "In1" },
+    //       { name: "In2" },
+    //       { name: "In3" },
+    //       { name: "In4" },
+    //       { name: "In5" },
+    //     ],
+    //     outputs: [
+    //       { name: "Out1", connectionId: [] },
+    //       { name: "Out2", connectionId: [] },
+    //     ],
+    //     controls: [
+    //       { name: "action", type: "v-btn" },
+    //       { name: "address", type: "address-input" },
+    //     ]
+    //   },
+    //   {
+    //     title: "Węzeł",
+    //     inputs: [
+    //       { name: "In1" },
+    //       { name: "In2" },
+    //     ],
+    //     outputs: [
+    //       { name: "Out1", connectionId: [] },
+    //       { name: "Out2", connectionId: [] },
+    //     ],
+    //     controls: [
+    //       { name: "action", type: "v-btn" },
+    //       { name: "address", type: "address-input" },
+    //     ]
+    //   }
+    // ]
   },
   unmounted() { },
 };

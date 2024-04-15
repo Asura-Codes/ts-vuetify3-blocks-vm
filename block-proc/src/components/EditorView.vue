@@ -4,11 +4,11 @@ import { ViewPlugin } from "@baklavajs/plugin-renderer-vue3";
 import { OptionPlugin } from "@baklavajs/plugin-options-vue3";
 import { Engine } from "@baklavajs/plugin-engine";
 
-import { PortIn } from "./Blocks/PortIn";
-import { PortOut } from "./Blocks/PortOut";
-import { Constant, eConstantValueType } from "./Blocks/Constant";
-import { Logic } from "./Blocks/Logic";
-import { Maths } from "./Blocks/Maths";
+import { PortIn } from "./BlocksBaklava/PortIn";
+import { PortOut } from "./BlocksBaklava/PortOut";
+import { Constant, eConstantValueType } from "./BlocksBaklava/Constant";
+import { Logic } from "./BlocksBaklava/Logic";
+import { Maths } from "./BlocksBaklava/Maths";
 </script>
 
 <template>

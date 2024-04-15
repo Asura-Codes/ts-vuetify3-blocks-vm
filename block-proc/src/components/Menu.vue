@@ -76,7 +76,7 @@
 
 <script lang="ts">
 import events from "@/plugins/events";
-import { eConstantValueType } from "./Blocks/Constant";
+import { eConstantValueType } from "./BlocksBaklava/Constant";
 
 export default {
   data: () => ({

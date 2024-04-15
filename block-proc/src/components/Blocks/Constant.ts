@@ -1,4 +1,5 @@
-import { Node } from "@baklavajs/core";
+import { NodeConstructor } from '@/lib/nodeflow/Node.vue';
+
 
 export enum eConstantValueType {
     NumberValue = "Number",
@@ -6,7 +7,7 @@ export enum eConstantValueType {
     BooleanValue = "Boolean"
 }
 
-export class Constant extends Node {
+export class Constant extends NodeConstructor {
     type: string;
     name: string;
     valueType: eConstantValueType;

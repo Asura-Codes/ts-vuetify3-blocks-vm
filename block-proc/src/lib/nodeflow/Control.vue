@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { fast_uuid } from './uuid';
-
+import { BaseConstructor } from './definitions';
 </script>
 
 <template>
@@ -10,14 +9,20 @@ import { fast_uuid } from './uuid';
 </template>
 
 <script lang="ts">
-export interface ControlConstructor {
+export class ControlConstructor extends BaseConstructor {
     name: string;
     type: string;
+    
+    constructor(nodeId: string, name: string, type: string) {
+        super();
+        this.nodeId = nodeId;
+        this.name = name;
+        this.type = type;
+    }
 }
 
 export default {
     data: () => ({
-        id: "",
     }),
     props: {
         manufacturer: {
@@ -27,20 +32,22 @@ export default {
         componentsMap: {
             type: Map,
             required: true
-        },
-        nodeId: {
-            type: String,
-            required: true
         }
     },
-    methods: {},
+    methods: {
+
+    },
     created() {
-        this.id = fast_uuid()
-        this.componentsMap.set(this.id, this);
+
     },
     mounted() {
         
     },
     unmounted() { },
+    computed: {
+        id() {
+            return String(this.manufacturer.id);
+        },
+    },
 };
 </script>
