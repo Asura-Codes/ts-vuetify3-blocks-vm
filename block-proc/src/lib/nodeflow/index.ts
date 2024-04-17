@@ -1,7 +1,9 @@
 import type { App } from 'vue'
-import AddressInput from './Inputs/AddressInput.vue'
+import IntegerInput from './Inputs/IntegerInput.vue'
+import SelectInput from './Inputs/SelectInput.vue'
 
 
 export function registerNodeflow(app: App) {
-  app.component('address-input', AddressInput)
+  app.component('IntegerInput', IntegerInput)
+  app.component('SelectInput', SelectInput)
 }

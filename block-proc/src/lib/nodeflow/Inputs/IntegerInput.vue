@@ -12,10 +12,10 @@
 export default {
     name: "address-input",
     data: () => ({
-        addr: 0
+        addr: 0xff
     }),
     mounted() {
-
+        
     },
     methods: {
 

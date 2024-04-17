@@ -1,15 +1,14 @@
-import { Node } from "@baklavajs/core";
+import { NodeConstructor } from '@/lib/nodeflow/Node.vue';
 
-export class Maths extends Node {
+
+export class Maths extends NodeConstructor {
     type: string;
-    name: string;
     noInputs: number;
     code: string;
 
     constructor(inputs: number) {
-        super();
+        super("Arithmetic");
         this.type = "Arithmetic";
-        this.name = "Arithmetic";
         this.code = '';
         this.noInputs = inputs;
         

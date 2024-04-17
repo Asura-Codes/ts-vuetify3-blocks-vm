@@ -2,7 +2,7 @@
 import Output, { OutputConstructor } from './Output.vue'
 import Input, { InputConstructor } from './Input.vue'
 import Control, { ControlConstructor } from './Control.vue'
-import { Ref, ref } from 'vue';
+import { PropType, Ref, ref } from 'vue';
 import { ConnectionConstructor } from './Connection.vue';
 import { BaseConstructor, RootMap } from './definitions';
 </script>
@@ -37,7 +37,7 @@ export class NodeConstructor extends BaseConstructor {
     inputs: InputConstructor[];
     controls: ControlConstructor[];
     connections: Map<string, 'input' | 'output'>;
-    translate: { x: Ref<number> | number, y: Ref<number> | number };
+    translate: { x: Ref<number> | any, y: Ref<number> | any };
 
     constructor(title: string, inputs?: InputConstructor[], outputs?: OutputConstructor[], controls?: ControlConstructor[]) {
         super();
@@ -101,16 +101,23 @@ export class NodeConstructor extends BaseConstructor {
         }
     }
 
+    getControlValue(name: string) {
+        return ''
+    }
+
+    setOutputValue(name: string, value: any) {
+        
+    }
 }
 
-export type NodeInstance = InstanceType<typeof NodeConstructor>;
+// export type NodeInstance = InstanceType<typeof NodeConstructor>;
 
 export default {
     data: () => ({
     }),
     props: {
         manufacturer: {
-            type: Object as () => NodeInstance,
+            type: Object as PropType<NodeConstructor>,
             required: true
         },
         componentsMap: {

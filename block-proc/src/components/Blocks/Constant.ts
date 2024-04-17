@@ -9,14 +9,12 @@ export enum eConstantValueType {
 
 export class Constant extends NodeConstructor {
     type: string;
-    name: string;
     valueType: eConstantValueType;
     code: string;
 
     constructor(type: eConstantValueType) {
-        super();
+        super("Constant");
         this.type = "Constant";
-        this.name = "Constant";
         this.code = '';
         
         this.valueType = eConstantValueType.NumberValue;

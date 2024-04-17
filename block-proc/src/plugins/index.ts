@@ -7,7 +7,7 @@
 // Plugins
 import { loadFonts } from './webfontloader'
 import vuetify from './vuetify'
-import { registerNodeflow } from '../lib/nodeflow'
+// import { registerNodeflow } from '../lib/nodeflow'
 
 
 // Types
@@ -18,5 +18,5 @@ export function registerPlugins(app: App) {
   loadFonts()
   app.use(vuetify)
 
-  registerNodeflow(app);
+  // registerNodeflow(app);
 }

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { markRaw } from "vue";
+import { markRaw, getCurrentInstance, App } from "vue";
 import { fast_uuid } from './uuid';
-import Node, { NodeConstructor, NodeInstance } from "./Node.vue"
+import Node, { NodeConstructor } from "./Node.vue"
 import { OutputConstructor } from "./Output.vue";
 import { InputConstructor } from "./Input.vue";
-import Connection, { ConnectionConstructor, ConnectionInstance } from './Connection.vue'
+import Connection, { ConnectionConstructor } from './Connection.vue'
+import { registerNodeflow } from ".";
 </script>
 
 <template>
@@ -23,6 +24,10 @@ import Connection, { ConnectionConstructor, ConnectionInstance } from './Connect
 </template>
 
 <script lang="ts">
+const MODULE_NODEFLOW = {
+  firstRun: true,
+}
+
 export interface ConnectionDefinition {
   title: string;
   id: string;
@@ -58,8 +63,8 @@ export default {
       x_event: 0,
       y_event: 0,
     }),
-    nodes: new Array<NodeInstance>(),
-    connections: new Array<ConnectionInstance>(),
+    nodes: new Array<NodeConstructor>(),
+    connections: new Array<ConnectionConstructor>(),
     componentsMap: markRaw(new Map<string, NodeConstructor | OutputConstructor | InputConstructor | ConnectionConstructor>),
     translate: { x: 0, y: 0 },
   }),
@@ -286,6 +291,16 @@ export default {
       return `background-position: left ${this.translate.x}px top ${this.translate.y}px;`
     },
   },
+  created() {
+    // Register components in "Inputs" directory on first run
+    if (MODULE_NODEFLOW.firstRun) {
+      const app = getCurrentInstance();
+      if (app) {
+        registerNodeflow(app.appContext.app);
+        MODULE_NODEFLOW.firstRun = false;
+      }
+    }
+  },
   mounted() {
     this.id = fast_uuid();
     this.componentsMap.set("canvas", this as any); // Testowo
@@ -295,6 +310,7 @@ export default {
 
     node.addInput("In1")
     node.addInput("In2")
+    node.addControl("Addr", "IntegerInput")
     node.addOutput("Out1")
     node.addOutput("Out2")
 

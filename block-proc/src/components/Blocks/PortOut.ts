@@ -1,14 +1,13 @@
-import { Node } from "@baklavajs/core";
+import { NodeConstructor } from '@/lib/nodeflow/Node.vue';
 
-export class PortOut extends Node {
+
+export class PortOut extends NodeConstructor {
     type: string;
-    name: string;
     code: string;
 
     constructor() {
-        super();
+        super("Output port");
         this.type = "PortOut";
-        this.name = "Output port";
         this.code = '';
         this.addOption("Type", "SelectOption", "ANALOG", undefined, {
             items: ['ANALOG', 'BINARY']

@@ -1,26 +1,28 @@
-import { Node } from "@baklavajs/core";
+import { NodeConstructor } from '@/lib/nodeflow/Node.vue';
 
-export class PortIn extends Node {
+
+export class PortIn extends NodeConstructor {
     type: string;
-    name: string;
     code: string;
 
     constructor() {
-        super();
+        super("Input port");
         this.type = "PortIn";
-        this.name = "Input port";
         this.code = '';
-        this.addOption("Type", "SelectOption", "ANALOG", undefined, {
-            items: ['ANALOG', 'BINARY']
-        });
-        this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
-        this.addOption("Bit", "InputOption", 0, undefined, {min: 0, max: 7});
-        this.addOutputInterface("Out");
+        this.addControl("Type", "SelectOption")
+        // this.addOption("Type", "SelectOption", "ANALOG", undefined, {
+        //     items: ['ANALOG', 'BINARY']
+        // });
+        this.addControl("Address", "IntegerInput")
+        // this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
+        // this.addOption("Bit", "InputOption", 0, undefined, {min: 0, max: 7});
+        // this.addOutputInterface("Out");
+        this.addOutput("Out1")
     }
 
     calculate() {
-        const typ = this.getOptionValue("Type");
-        const addr = this.getOptionValue("Address");
+        const typ = this.getControlValue("Type");
+        const addr = this.getControlValue("Address");
         const label = this.id.replaceAll('_', '');
         let letter = 'A';
 
@@ -38,6 +40,6 @@ export class PortIn extends Node {
 
         console.log(`PortIn: ${this.code}`);
         
-        this.getInterface("Out").value = label;
+        this.setOutputValue("Out", label);
     }
 }

@@ -7,11 +7,11 @@ export type RootMap = Map<string, BaseConstructor>;
 
 export class BaseConstructor {
     root?: RootMap;
-    id: Ref<string>;
+    id: Ref<string> & string;
     nodeId: string;
 
     constructor(root?: RootMap) {
-        this.id = ref(fast_uuid());
+        this.id = ref(fast_uuid()) as Ref<string> & string;
         if (root) {
             this.setNodeflow(root);
         }

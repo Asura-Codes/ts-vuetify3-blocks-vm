@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { OutputConstructor } from './Output.vue'
 import { InputConstructor } from './Input.vue'
-import { Ref, ref } from 'vue';
+import { PropType, Ref, ref } from 'vue';
 import { BaseConstructor } from './definitions';
 </script>
 
@@ -16,18 +16,17 @@ import { BaseConstructor } from './definitions';
 </template>
 
 <script lang="ts">
-
 export class ConnectionConstructor extends BaseConstructor {
     outputId: string;
     inputId: string;
     line: {
-        color: Ref<string> | any;
-        strokeWidth: Ref<number> | any;
-        strokeDasharray: Ref<string> | any;
-        x1: Ref<number> | any;
-        y1: Ref<number> | any;
-        x2: Ref<number> | any;
-        y2: Ref<number> | any;
+        color: Ref<string> & string;
+        strokeWidth: Ref<number> & number;
+        strokeDasharray: Ref<string> & string;
+        x1: Ref<number> & number;
+        y1: Ref<number> & number;
+        x2: Ref<number> & number;
+        y2: Ref<number> & number;
     };
 
     constructor(outputId: string, inputId?: string) {
@@ -35,13 +34,13 @@ export class ConnectionConstructor extends BaseConstructor {
         this.outputId = outputId;
         this.inputId = inputId ?? "";
         this.line = {
-            color: ref('white'),
-            strokeWidth: ref(2),
-            strokeDasharray: ref('4'),
-            x1: ref(0),
-            y1: ref(0),
-            x2: ref(0),
-            y2: ref(0)
+            color: ref('white') as Ref<string> & string,
+            strokeWidth: ref(2) as Ref<number> & number,
+            strokeDasharray: ref('4') as Ref<string> & string,
+            x1: ref(0) as Ref<number> & number,
+            y1: ref(0) as Ref<number> & number,
+            x2: ref(0) as Ref<number> & number,
+            y2: ref(0) as Ref<number> & number
         };
     }
 
@@ -114,14 +113,14 @@ export class ConnectionConstructor extends BaseConstructor {
     }
 }
 
-export type ConnectionInstance = InstanceType<typeof ConnectionConstructor>;
+// export type ConnectionInstance = InstanceType<typeof ConnectionConstructor>;
 
 export default {
     data: () => ({
     }),
     props: {
         manufacturer: {
-            type: Object as () => ConnectionInstance,
+            type: Object as PropType<ConnectionConstructor>,
             required: true
         },
         componentsMap: {
