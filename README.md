@@ -1,4 +1,4 @@
-# ts-vuetify3-baklavajs-blocks-vm
+# ts-vuetify3-blocks-vm
 
 ## In progress
 
@@ -6,7 +6,6 @@
 
 Generating byte code from nodes editor (mainly: in, out, math and logic). *EARLY STAGE*
 
-https://asura-codes.github.io/ts-vuetify3-baklavajs-blocks-vm/
 
 ### vm-emscripten
 
