@@ -4,7 +4,8 @@
 
 <template>
     <main>
-        <input v-model.number="value" />
+        <v-input v-model.number="value" :reverse="false" controlVariant="default" label="" :hideInput="false"
+            :inset="false" />
     </main>
 </template>
 
@@ -16,12 +17,20 @@ export default {
     }),
     props: {
         initialValue: {
-            type: Number,
-            default: 123
+            type: Number
+        },
+        min: {
+            type: Number
+        },
+        max: {
+            type: Number
+        },
+        setValue: {
+            type: Function
         },
     },
     mounted() {
-        this.value = this.initialValue;
+        this.value = this.initialValue ?? 0;
     },
     methods: {
 

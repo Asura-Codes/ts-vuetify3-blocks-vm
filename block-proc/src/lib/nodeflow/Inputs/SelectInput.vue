@@ -26,13 +26,12 @@ export default {
         },
     },
     mounted() {
-        console.log(this.$props)
     },
     methods: {
         changeRoute(item) {
-            if (this.$props.setValue)
+            if (this.$props.setValue) {
                 this.$props.setValue(item);
-            console.log(item)
+            }
         }
     }
 }

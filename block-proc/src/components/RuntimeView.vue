@@ -82,13 +82,12 @@ hljs.registerLanguage("svmasm", svmasm);
 
         <template v-slot:body="{ items }">
           <tr v-for="(row, rowIdx) in items" :key="rowIdx">
-            <td style="width: 120px">{{ row.columns.name }}</td>
-            <td v-for="(item, idx) in row.raw.arr" :key="idx">
-              {{ console.log(item) }}
+            <td style="width: 120px"> {{ row.name }} </td>
+            <td v-for="(item, idx) in row.arr" :key="idx">
               <v-text-field
-                v-if="row.raw.editable"
+                v-if="row.editable"
                 :value="item"
-                @input="(event: any) => { row.raw.arr[idx] = row.raw.dest[idx] = Number(event.target.value); }"
+                @input="(event: any) => { row.arr[idx] = row.dest[idx] = Number(event.target.value); }"
                 single-line
                 class="num-field"
                 hide-details
@@ -259,6 +258,10 @@ export default {
         ];
       }
     },
+    log(obj: any) {
+      console.log("MYLOG:");
+      console.log(obj);
+    }
   },
   computed: {
     headers() {

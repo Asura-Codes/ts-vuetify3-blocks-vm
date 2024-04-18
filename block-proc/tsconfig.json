@@ -16,6 +16,12 @@
     "skipLibCheck": true,
     "noEmit": true,
     "noImplicitAny": false,
+    "types": [
+      "vuetify",
+      "vite/client",
+      "vite-plugin-vue-layouts/client",
+      "unplugin-vue-router/client"
+    ],
     "paths": {
       "@/*": [
        "src/*"
@@ -24,5 +30,5 @@
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.js"],
   "references": [{ "path": "./tsconfig.node.json" }],
-  "exclude": ["node_modules"]
+  "exclude": ["dist", "node_modules", "cypress"]
 }

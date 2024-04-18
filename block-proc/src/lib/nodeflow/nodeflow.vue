@@ -285,8 +285,6 @@ export default {
       this.nodes.push(node);
     },
     execute() {
-      console.log(this.componentsMap)
-
       try {
         const sorted = sortTopologically(this.nodes as any, this.connections as any);
 
