@@ -2,7 +2,7 @@
 import Output, { OutputConstructor } from './Output.vue'
 import Input, { InputConstructor } from './Input.vue'
 import Control, { ControlConstructor, ControlProperties } from './Control.vue'
-import { PropType, Ref, ref } from 'vue';
+import { PropType, Ref, UnwrapRef, ref } from 'vue';
 import { ConnectionConstructor } from './Connection.vue';
 import { BaseConstructor, RootMap } from './definitions';
 </script>
@@ -136,7 +136,7 @@ export default {
     }),
     props: {
         manufacturer: {
-            type: Object as PropType<NodeConstructor>,
+            type: Object as PropType<UnwrapRef<NodeConstructor>>,
             required: true
         },
         componentsMap: {

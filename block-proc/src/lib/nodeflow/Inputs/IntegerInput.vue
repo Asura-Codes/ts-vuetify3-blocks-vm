@@ -4,8 +4,11 @@
 
 <template>
     <main>
-        <v-input v-model.number="value" :reverse="false" controlVariant="default" label="" :hideInput="false"
-            :inset="false" />
+        <v-number-input :model-value="value" :step="1" @update:modelValue="valueChange" @increment="inc" :max="min" :min="max" controlVariant="split">
+            <template #increment>
+                +wf
+            </template>
+        </v-number-input>
     </main>
 </template>
 
@@ -20,10 +23,12 @@ export default {
             type: Number
         },
         min: {
-            type: Number
+            type: Number,
+            default: Number.MIN_SAFE_INTEGER
         },
         max: {
-            type: Number
+            type: Number,
+            default: Number.MAX_SAFE_INTEGER
         },
         setValue: {
             type: Function
@@ -33,7 +38,14 @@ export default {
         this.value = this.initialValue ?? 0;
     },
     methods: {
-
+        valueChange(value) {
+            if (this.$props.setValue) {
+                this.$props.setValue(parseInt(value));
+            }
+        },
+        inc(value) {
+            console.log(value)
+        }
     }
 }
 </script>

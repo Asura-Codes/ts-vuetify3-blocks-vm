@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PropType, UnwrapRef } from 'vue';
 import { NodeConstructor } from './Node.vue';
 import { BaseConstructor } from './definitions';
 </script>
@@ -78,7 +79,7 @@ export default {
     }),
     props: {
         manufacturer: {
-            type: OutputConstructor,
+            type: Object as PropType<UnwrapRef<OutputConstructor>>,
             required: true
         },
         componentsMap: {

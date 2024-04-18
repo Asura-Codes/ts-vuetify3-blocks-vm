@@ -103,17 +103,14 @@ export default {
         this.selected.target = target;
         this.selected.component = this.componentsMap.get(target.id);
         this.selected.action = 'move';
-      } else
-        if (target?.classList.contains('nodeflow')) {
-          this.selected.action = 'translate';
-          this.selected.x_start = Number(this.translate.x);
-          this.selected.y_start = Number(this.translate.y);
-        } else
-          if (target?.classList.contains('output_handle')) {
-            this.selected.component = this.startConnection(target.id);
-            this.selected.action = 'connection';
-          }
-      if (target?.classList.contains('input_handle')) {
+      } else if (target?.classList.contains('nodeflow')) {
+        this.selected.action = 'translate';
+        this.selected.x_start = Number(this.translate.x);
+        this.selected.y_start = Number(this.translate.y);
+      } else if (target?.classList.contains('output_handle')) {
+        this.selected.component = this.startConnection(target.id);
+        this.selected.action = 'connection';
+      } else if (target?.classList.contains('input_handle')) {
         const inputComponent: InputConstructor | undefined = this.componentsMap.get(target.id) as InputConstructor | undefined;
         if (inputComponent) {
           const connId = inputComponent.connectionId();
@@ -131,7 +128,7 @@ export default {
 
       // console.log(e.type);
       // console.log(target?.classList);
-      console.log(`click__x: ${e_pos_x} | y: ${e_pos_y}`)
+      console.log(`click__x: ${e_pos_x} | y: ${e_pos_y}`);
     },
     position(e: MouseEvent | TouchEvent) {
       if (this.selected.action == 'none')

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { OutputConstructor } from './Output.vue'
 import { InputConstructor } from './Input.vue'
-import { PropType, Ref, ref } from 'vue';
+import { PropType, Ref, UnwrapRef, ref } from 'vue';
 import { BaseConstructor } from './definitions';
 </script>
 
@@ -131,7 +131,7 @@ export default {
     }),
     props: {
         manufacturer: {
-            type: Object as PropType<ConnectionConstructor>,
+            type: Object as PropType<UnwrapRef<ConnectionConstructor>>,
             required: true
         },
         componentsMap: {

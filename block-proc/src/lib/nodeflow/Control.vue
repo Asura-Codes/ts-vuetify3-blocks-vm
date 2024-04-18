@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PropType, UnwrapRef } from 'vue';
 import { BaseConstructor } from './definitions';
 </script>
 
@@ -63,7 +64,7 @@ export default {
     }),
     props: {
         manufacturer: {
-            type: Object as () => ControlConstructor,
+            type: Object as PropType<UnwrapRef<ControlConstructor>>,
             required: true
         },
         componentsMap: {

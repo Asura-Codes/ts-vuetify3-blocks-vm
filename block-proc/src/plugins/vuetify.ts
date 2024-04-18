@@ -12,7 +12,7 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
-// import { VDataTable } from 'vuetify/labs/VDataTable'
+import { VNumberInput } from 'vuetify/labs/VNumberInput'
 
 const myCustomLightTheme = {
   dark: true,
@@ -39,7 +39,7 @@ export default createVuetify({
     },
   },
   components: {
-    // VDataTable, 
+    VNumberInput, 
     ...components
   },
   directives,
