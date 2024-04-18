@@ -32,7 +32,6 @@ export class OutputConstructor extends BaseConstructor {
             const node: NodeConstructor | undefined = this.getById(this.nodeId) as any;
             if (node) {
                 node.addConnection(connectionId, "output")
-                // this.$emit("add-connection", connectionId, "output");
             }
         } else {
             this.connectionId.splice(index, 1);
@@ -47,7 +46,6 @@ export class OutputConstructor extends BaseConstructor {
             const node: NodeConstructor | undefined = this.getById(this.nodeId) as any;
             if (node && deleted) {
                 node.addConnection(deleted[0], "output")
-                // this.$emit("remove-connection", this.connectionId, "output");
             }
         }
     }
@@ -103,13 +101,5 @@ export default {
             return String(this.manufacturer.id);
         },
     },
-    watch: {
-        manufacturer: {
-            handler(cfg, _) {
-                // console.log(cfg)
-            },
-            deep: true
-        }
-    }
 };
 </script>

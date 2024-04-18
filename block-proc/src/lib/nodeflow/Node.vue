@@ -125,6 +125,7 @@ export class NodeConstructor extends BaseConstructor {
         }
     }
 
+    // Empty
     calculate() {}
 }
 

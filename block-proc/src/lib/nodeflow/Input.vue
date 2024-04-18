@@ -18,7 +18,6 @@ import { BaseConstructor } from './definitions';
 export class InputConstructor extends BaseConstructor {
     name: string;
     connId?: string;
-    element: HTMLElement | undefined;
 
     constructor(nodeId: string, name: string, connId?: string) {
         super();
@@ -32,10 +31,8 @@ export class InputConstructor extends BaseConstructor {
         if (node) {
             if (connId) {
                 node.addConnection(connId, "input")
-                // this.$emit("add-connection", connectionId, "input");
             } else if (this.connId) {
                 node.removeConnection(this.connId)
-                // this.$emit("remove-connection", this.manufacturer.connectionId, "input");
             }
         }
         this.connId = connId;
@@ -97,14 +94,5 @@ export default {
             return String(this.manufacturer.id);
         },
     },
-    watch: {
-        manufacturer: {
-            handler(cfg, _) {
-                // console.log(cfg)
-                cfg.element = this.$refs.handle;
-            },
-            deep: true
-        }
-    }
 };
 </script>

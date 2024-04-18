@@ -15,10 +15,11 @@ import { sortTopologically } from "./topologicalSorting";
     <div ref="background" class="nodeflow-background" :style="translateBackground" />
     <div ref="nodecanvas" class="nodeflow" :style="translateCanvas">
       <div class="nodes">
+        <!-- Nodes -->
         <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" />
       </div>
       <div class="connections">
-        <!-- Connections node -->
+        <!-- Connections -->
         <Connection v-for="params of connections" :manufacturer="params" :components-map="componentsMap" />
       </div>
     </div>

@@ -53,6 +53,7 @@ export class ControlConstructor extends BaseConstructor {
     }
 
     getValue() {
+        // Must be set by vue component. Ex in Input directory
         return this.props.value;
     }
 }

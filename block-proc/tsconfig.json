@@ -18,9 +18,7 @@
     "noImplicitAny": false,
     "types": [
       "vuetify",
-      "vite/client",
-      "vite-plugin-vue-layouts/client",
-      "unplugin-vue-router/client"
+      "vite/client"
     ],
     "paths": {
       "@/*": [
