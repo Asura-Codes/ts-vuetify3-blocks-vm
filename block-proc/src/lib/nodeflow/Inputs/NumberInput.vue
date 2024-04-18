@@ -10,7 +10,7 @@
 
 <script lang="ts">
 export default {
-    name: "IntegerInput",
+    name: "NumberInput",
     data: () => ({
         value: 0
     }),

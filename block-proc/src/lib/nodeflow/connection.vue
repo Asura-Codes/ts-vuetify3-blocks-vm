@@ -111,6 +111,17 @@ export class ConnectionConstructor extends BaseConstructor {
             this.setEndPoint(center[0], center[1]);
         }
     }
+
+    removeConnection() {
+        if (this.outputId) {
+            const output: OutputConstructor = this.getById(this.outputId) as any;
+            output.removeConnection(this.id);
+        }
+        if (this.inputId) {
+            const input: InputConstructor = this.getById(this.inputId) as any;
+            input.setConnectionId(undefined);
+        }
+    }
 }
 
 // export type ConnectionInstance = InstanceType<typeof ConnectionConstructor>;
@@ -173,14 +184,6 @@ export default {
         this.initialize();
     },
     unmounted() {
-        // if (this.manufacturer.outputId) {
-        //     const output: typeof Output = this.componentsMap.get(this.manufacturer.outputId) as any;
-        //     output.removeConnection(this.id);
-        // }
-        // if (this.manufacturer.inputId) {
-        //     const input: typeof Input = this.componentsMap.get(this.manufacturer.inputId) as any;
-        //     input.setConnectionId(undefined);
-        // }
     },
     watch: {
         manufacturer: {

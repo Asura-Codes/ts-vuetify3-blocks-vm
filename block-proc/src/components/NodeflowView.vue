@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import NodeFlow from "@/lib/nodeflow/NodeFlow.vue";
-import { NodeConstructor } from '@/lib/nodeflow/Node.vue';
-import { eConstantValueType } from "./BlocksBaklava/Constant";
+import { PortIn } from "./Blocks/PortIn";
+import { PortOut } from "./Blocks/PortOut";
+import { Constant, eConstantValueType } from "./Blocks/Constant";
+import { Logic } from "./Blocks/Logic";
+import { Maths } from "./Blocks/Maths";
 </script>
 
 <template>
   <main class="editor-space">
-    <NodeFlow ref="floweditor"/>    
+    <NodeFlow ref="floweditor" />
   </main>
 </template>
 
@@ -19,6 +22,7 @@ import { eConstantValueType } from "./BlocksBaklava/Constant";
 
 <script lang="ts">
 import events from "../plugins/events";
+import { Component, ComponentPublicInstance, markRaw } from "vue";
 
 interface NodeType {
   type: string;
@@ -27,67 +31,39 @@ interface NodeType {
 
 export default {
   data: () => ({
+    editor: undefined as InstanceType<typeof NodeFlow> | undefined,
     selected: "",
     message: ""
   }),
   methods: {
     addNode(nodeType: NodeType) {
-      let node = undefined as undefined | NodeConstructor;
+      let node = undefined as undefined | PortIn;
       switch (nodeType.type) {
         case "Source":
-          node = {
-            title: "PortIn",
-            outputs: [
-              { name: "Out1", connectionId: [] },
-            ],
-            inputs: [],
-            controls: [
-              { name: "address", type: "address-input" },
-            ],
-          };
+          node = new PortIn();
           break;
         case "Destiny":
-          node = {
-            title: "PortOut",
-            outputs: [],
-            inputs: [
-              { name: "In1" },
-            ],
-            controls: [
-              { name: "address", type: "address-input" },
-            ],
-          };
+          node = new PortOut();
           break;
         case eConstantValueType.NumberValue:
         case eConstantValueType.IntegerValue:
         case eConstantValueType.BooleanValue:
-          node = {
-            title: "Constant",
-            outputs: [],
-            inputs: [],
-            controls: [],
-          };
+          node = new Constant(nodeType.type);
           break;
         case "Logic":
-          node = {
-            title: "Logic",
-            outputs: [],
-            inputs: [],
-            controls: [],
-          };
+          node = new Logic(nodeType.count);
           break;
         case "Arithmetic":
-          node = {
-            title: "Arithmetic",
-            outputs: [],
-            inputs: [],
-            controls: [],
-          };
+          node = new Maths(nodeType.count);
           break;
       }
-      if (node) {
-        const editor: typeof NodeFlow = this.$refs.floweditor as any;
-        editor.addNode(node);
+      if (node && this.editor) {
+        this.editor.addNode(node);
+      }
+    },
+    execute() {
+      if (this.editor) {
+        this.editor.execute();
       }
     },
     compile() {
@@ -110,11 +86,19 @@ export default {
     }
   },
   mounted() {
+    this.editor = markRaw(this.$refs.floweditor as InstanceType<typeof NodeFlow>);
     events.on("addNode", this.addNode.bind(this));
     events.on("compile", this.compile.bind(this));
     events.on("demo", this.demo.bind(this));
+    events.on("execute", this.execute.bind(this));
+
+    if (this.editor) {
+      this.editor.addNode(new PortIn());
+      this.editor.addNode(new PortOut());
+      this.editor.addNode(new Logic(3));
+    }
   },
-  unmounted() {},
+  unmounted() { },
   components: {
     NodeFlow
   }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Output, { OutputConstructor } from './Output.vue'
 import Input, { InputConstructor } from './Input.vue'
-import Control, { ControlConstructor } from './Control.vue'
+import Control, { ControlConstructor, ControlProperties } from './Control.vue'
 import { PropType, Ref, ref } from 'vue';
 import { ConnectionConstructor } from './Connection.vue';
 import { BaseConstructor, RootMap } from './definitions';
@@ -71,8 +71,8 @@ export class NodeConstructor extends BaseConstructor {
         this.outputs.push(new OutputConstructor(this.getId(), name))
     }
 
-    addControl(name: string, type: string) {
-        this.controls.push(new ControlConstructor(this.getId(), name, type))
+    addControl(name: string, type: string, props?: ControlProperties) {
+        this.controls.push(new ControlConstructor(this.getId(), name, type, props))
     }
 
     addConnection(connId: string, type: 'input' | 'output') {
@@ -102,12 +102,30 @@ export class NodeConstructor extends BaseConstructor {
     }
 
     getControlValue(name: string) {
-        return ''
+        for (const control of this.controls) {
+            if (control.name == name) {
+                return control.getValue();
+            }
+        }
+    }
+
+    getInputValue(name: string) {
+        for (const input of this.inputs) {
+            if (input.name == name) {
+                return input.getValue();
+            }
+        }
     }
 
     setOutputValue(name: string, value: any) {
-        
+        for (const output of this.outputs) {
+            if (output.name == name) {
+                return output.setValue(value);
+            }
+        }
     }
+
+    calculate() {}
 }
 
 // export type NodeInstance = InstanceType<typeof NodeConstructor>;

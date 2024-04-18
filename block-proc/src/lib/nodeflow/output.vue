@@ -16,6 +16,7 @@ import { BaseConstructor } from './definitions';
 export class OutputConstructor extends BaseConstructor {
     name: string;
     connectionId: string[];
+    value?: any;
 
     constructor(nodeId: string, name: string, connectionId?: string[]) {
         super();
@@ -63,6 +64,14 @@ export class OutputConstructor extends BaseConstructor {
 
             return view.map_point(point);
         }
+    }
+    
+    getValue() {
+        return this.value;
+    }
+    
+    setValue(value: any) {
+        return this.value = value;
     }
 }
 

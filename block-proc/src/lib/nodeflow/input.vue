@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ConnectionConstructor } from './Connection.vue';
 import { NodeConstructor } from './Node.vue';
+import { OutputConstructor } from './Output.vue';
 import { BaseConstructor } from './definitions';
 </script>
 
@@ -51,6 +53,18 @@ export class InputConstructor extends BaseConstructor {
             const view: any = this.getById("canvas") as any;
 
             return view.map_point(point);
+        }
+    }
+
+    getValue() {
+        if (this.connId) {
+            const connection: ConnectionConstructor = this.getById(this.connId) as any;
+            if (connection) {
+                const output: OutputConstructor = connection.getOutput() as any;
+                if (output) {
+                    return output.getValue();
+                }
+            }
         }
     }
 }

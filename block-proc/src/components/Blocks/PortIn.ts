@@ -9,15 +9,19 @@ export class PortIn extends NodeConstructor {
         super("Input port");
         this.type = "PortIn";
         this.code = '';
-        this.addControl("Type", "SelectOption")
         // this.addOption("Type", "SelectOption", "ANALOG", undefined, {
         //     items: ['ANALOG', 'BINARY']
         // });
-        this.addControl("Address", "IntegerInput")
+        this.addControl("Type", "SelectInput", {
+            initialValue: "ANALOG",
+            items: ['ANALOG', 'BINARY']
+        })
+        this.addControl("Address", "IntegerInput", { min: 0, max: 256 })
+        this.addControl("Bit", "IntegerInput", { min: 0, max: 7 })
         // this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
         // this.addOption("Bit", "InputOption", 0, undefined, {min: 0, max: 7});
         // this.addOutputInterface("Out");
-        this.addOutput("Out1")
+        this.addOutput("Out")
     }
 
     calculate() {

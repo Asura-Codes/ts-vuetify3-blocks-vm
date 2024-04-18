@@ -58,6 +58,14 @@
         class="ma-2"
         x-large
         color="light"
+        @click="onClickMenu('execute', 'program')"
+      >
+        Compile
+      </v-btn>
+      <v-btn
+        class="ma-2"
+        x-large
+        color="light"
         @click="onClickMenu('demo', 'program')"
       >
         Load DEMO
@@ -84,7 +92,7 @@ export default {
     items: Array.from({ length: 8 }, (_, i) => i + 1),
     operations: [
       { title: "Logic", type: "Logic" },
-      { title: "Math", type: "Math" },
+      { title: "Math", type: "Arithmetic" },
     ],
     constants: [
       { title: "Constant - float", type: eConstantValueType.NumberValue },

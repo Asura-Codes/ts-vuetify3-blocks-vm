@@ -12,18 +12,24 @@ export class Logic extends NodeConstructor {
         this.code = '';
         this.noInputs = inputs;
         
-        this.addOutputInterface("Out");
+        // this.addOutputInterface("Out");
+        this.addOutput("Out");
         
-        this.addOption("Logic", "SelectOption", "AND", undefined, {
+        // this.addOption("Logic", "SelectOption", "AND", undefined, {
+        //     items: ["AND", "OR", "XOR"]
+        // });
+        this.addControl("Logic", "SelectInput", {
+            initialValue: "AND",
             items: ["AND", "OR", "XOR"]
         });
 
         for (let i = 1; i <= this.noInputs; i++) 
-            this.addInputInterface("In " + i.toString())
+            this.addInput("In " + i.toString())
+            // this.addInputInterface("In " + i.toString())
     }
 
     calculate() {
-        const operation = this.getOptionValue("Logic");
+        const operation = this.getControlValue("Logic");
         const label = this.id.replaceAll('_', '');
 
         let oper = 'add';
@@ -40,7 +46,7 @@ export class Logic extends NodeConstructor {
 
         const sources = [];
         for (let i = 1; i <= this.noInputs; i++) 
-            sources.push(this.getInterface("In " + i.toString()).value as never);
+            sources.push(this.getInputValue("In " + i.toString()) as never);
         
         console.log(sources)
         
@@ -59,6 +65,6 @@ export class Logic extends NodeConstructor {
             this.code = '';
         }
 
-        this.getInterface("Out").value = label;
+        this.setOutputValue("Out", label);
     }
 }

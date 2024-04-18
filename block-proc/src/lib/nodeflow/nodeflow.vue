@@ -6,6 +6,8 @@ import { OutputConstructor } from "./Output.vue";
 import { InputConstructor } from "./Input.vue";
 import Connection, { ConnectionConstructor } from './Connection.vue'
 import { registerNodeflow } from ".";
+import { MODULE_NODEFLOW } from './index'
+import { sortTopologically } from "./topologicalSorting";
 </script>
 
 <template>
@@ -24,10 +26,6 @@ import { registerNodeflow } from ".";
 </template>
 
 <script lang="ts">
-const MODULE_NODEFLOW = {
-  firstRun: true,
-}
-
 export interface ConnectionDefinition {
   title: string;
   id: string;
@@ -68,7 +66,7 @@ export default {
     componentsMap: markRaw(new Map<string, NodeConstructor | OutputConstructor | InputConstructor | ConnectionConstructor>),
     translate: { x: 0, y: 0 },
   }),
-  expose: ['addNode'],
+  expose: ['addNode', 'execute'],
   methods: {
     initialize() {
       this.canvas = markRaw(this.$refs.nodeflow as HTMLElement);
@@ -276,11 +274,30 @@ export default {
     },
     removeConnection(connId: string) {
       const index = this.connections.findIndex(conn => conn.id == connId);
-      this.connections.splice(index, 1);
+      if (index != -1) {
+        const deleted = this.connections.splice(index, 1);
+        this.componentsMap.delete(connId);
+        deleted[0].removeConnection();
+      }
     },
     addNode(node: NodeConstructor) {
       node.setNodeflow(this.componentsMap);
       this.nodes.push(node);
+    },
+    execute() {
+      console.log(this.componentsMap)
+
+      try {
+        const sorted = sortTopologically(this.nodes as any, this.connections as any);
+
+        for (const node of sorted.calculationOrder) {
+          if (typeof node.calculate === 'function') {
+            node.calculate(); // testing purposes
+          }
+        }
+      } catch (ex) {
+        console.error(ex);
+      }
     }
   },
   computed: {
@@ -306,25 +323,26 @@ export default {
     this.componentsMap.set("canvas", this as any); // Testowo
     this.initialize();
 
-    let node = new NodeConstructor("Węzeł 1");
+    // let node = new NodeConstructor("Węzeł 1");
 
-    node.addInput("In1")
-    node.addInput("In2")
-    node.addControl("Addr", "IntegerInput")
-    node.addOutput("Out1")
-    node.addOutput("Out2")
+    // node.addInput("In1")
+    // node.addInput("In2")
+    // node.addControl("Addr", "IntegerInput", { initialValue: 345 })
+    // node.addControl("Addr", "SelectInput")
+    // node.addOutput("Out1")
+    // node.addOutput("Out2")
 
-    this.addNode(node);
+    // this.addNode(node);
 
-    node = new NodeConstructor("Węzeł 2");
-    node.addInput("In1")
-    node.addInput("In2")
-    node.addInput("In3")
-    node.addOutput("Out1")
-    node.addOutput("Out2")
-    node.addOutput("Out3")
+    // node = new NodeConstructor("Węzeł 2");
+    // node.addInput("In1")
+    // node.addInput("In2")
+    // node.addInput("In3")
+    // node.addOutput("Out1")
+    // node.addOutput("Out2")
+    // node.addOutput("Out3")
 
-    this.addNode(node);
+    // this.addNode(node);
 
     // this.nodes = [
     //   {

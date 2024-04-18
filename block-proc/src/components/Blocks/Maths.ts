@@ -12,18 +12,24 @@ export class Maths extends NodeConstructor {
         this.code = '';
         this.noInputs = inputs;
         
-        this.addOutputInterface("Out");
+        // this.addOutputInterface("Out");
+        this.addOutput("Out");
         
-        this.addOption("Operation", "SelectOption", "+", undefined, {
+        // this.addOption("Operation", "SelectOption", "+", undefined, {
+        //     items: ['+', '-', '*', '/']
+        // });        
+        this.addControl("Operation", "SelectInput", {
+            initialValue: "+",
             items: ['+', '-', '*', '/']
         });
 
         for (let i = 1; i <= this.noInputs; i++) 
-            this.addInputInterface("In " + i.toString())
+            this.addInput("In " + i.toString())
+            // this.addInputInterface("In " + i.toString())
     }
 
     calculate() {
-        const operation = this.getOptionValue("Operation");
+        const operation = this.getControlValue("Operation");
         const label = this.id.replaceAll('_', '');
 
         let oper = 'add';
@@ -43,7 +49,7 @@ export class Maths extends NodeConstructor {
         
         const sources = [];
         for (let i = 1; i <= this.noInputs; i++) 
-            sources.push(this.getInterface("In " + i.toString()).value as never);
+            sources.push(this.getInputValue("In " + i.toString()) as never);
         
         console.log(sources)
 
@@ -62,6 +68,6 @@ export class Maths extends NodeConstructor {
             this.code = '';
         }
 
-        this.getInterface("Out").value = label;
+        this.setOutputValue("Out", label);
     }
 }

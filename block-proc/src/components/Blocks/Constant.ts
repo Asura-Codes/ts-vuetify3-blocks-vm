@@ -25,26 +25,29 @@ export class Constant extends NodeConstructor {
             case eConstantValueType.BooleanValue: this.setAsBooleanOption(); break;
         }
         
-        this.addOutputInterface("Out");
+        this.addOutput("Out");
     }
 
     setAsNumberOption() {
-        this.addOption("Value", "NumberOption", 0);
+        // this.addOption("Value", "NumberOption", 0);
+        this.addControl("Value", "NumberInput");
         this.valueType = eConstantValueType.NumberValue;
     }
     
     setAsIntegerOption() {
-        this.addOption("Value", "IntegerOption", false);
+        // this.addOption("Value", "IntegerOption", false);
+        this.addControl("Value", "IntegerInput");
         this.valueType = eConstantValueType.IntegerValue;
     }
     
     setAsBooleanOption() {
-        this.addOption("Value", "CheckboxOption", false);
+        // this.addOption("Value", "CheckboxOption", false);
+        this.addControl("Value", "CheckboxInput");
         this.valueType = eConstantValueType.BooleanValue;
     }
 
     calculate() {
-        const value = this.getOptionValue("Value");
+        const value = this.getControlValue("Value");
         const label = this.id.replaceAll('_', '');
 
         console.log(`Constant: ${value}`);
@@ -63,6 +66,6 @@ export class Constant extends NodeConstructor {
         
         console.log(`Constant: ${this.code}`);
 
-        this.getInterface("Out").value = label;
+        this.setOutputValue("Out", label);
     }
 }
