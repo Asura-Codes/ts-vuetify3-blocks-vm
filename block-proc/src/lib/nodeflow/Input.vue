@@ -10,7 +10,7 @@ import { BaseConstructor } from './definitions';
     <div class="input">
         <div class="input_handle" :id="id" ref="handle"></div>
         <div class="input_txt">
-            {{ manufacturer.name }}
+            <strong>{{ manufacturer.name }}</strong>
         </div>
     </div>
 </template>

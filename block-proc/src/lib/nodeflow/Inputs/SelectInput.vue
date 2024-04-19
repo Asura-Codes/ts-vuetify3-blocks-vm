@@ -4,7 +4,7 @@
 
 <template>
     <main>
-        <v-select :items="items" density="compact" @update:modelValue="changeRoute"/>
+        <v-select :label="$props.label" v-model="item" :items="items" density="compact" @update:modelValue="changeRoute" hide-details />
     </main>
 </template>
 
@@ -12,7 +12,7 @@
 export default {
     name: "SelectInput",
     data: () => ({
-        addr: 0xff
+        item: ''
     }),
     props: {
         initialValue: {
@@ -24,8 +24,12 @@ export default {
         items: {
             type: Array<String>,
         },
+        label: {
+            type: String
+        },
     },
     mounted() {
+        this.item = this.initialValue ?? '';
     },
     methods: {
         changeRoute(item) {

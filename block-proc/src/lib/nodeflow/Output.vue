@@ -8,7 +8,7 @@ import { BaseConstructor } from './definitions';
     <div class="output">
         <div class="output_handle" :id="id" ref="handle"></div>
         <div class="output_txt">
-            {{ manufacturer.name }}
+            <strong>{{ manufacturer.name }}</strong>
         </div>
     </div>
 </template>

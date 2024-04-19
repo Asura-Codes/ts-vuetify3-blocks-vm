@@ -17,12 +17,12 @@ import { BaseConstructor, RootMap } from './definitions';
             <Output v-for="params of manufacturer.outputs" :manufacturer="params"
                 :components-map="componentsMap" />
         </div>
-        <div class="nodeflow_content_node">
+        <v-card class="nodeflow_content_node px-2 mt-2" outlined >
             <!-- Controls node -->
-            <Control v-for="params of manufacturer.controls" :manufacturer="params"
+            <Control v-for="params of manufacturer.controls" v-show="params.visible" :manufacturer="params"
                 :components-map="componentsMap" />
-        </div>
-        <div class="inputs">
+        </v-card>
+        <div class="inputs mt-2">
             <!-- Inputs node -->
             <Input v-for="params of manufacturer.inputs" :manufacturer="params"
                 :components-map="componentsMap" />
@@ -101,10 +101,31 @@ export class NodeConstructor extends BaseConstructor {
         }
     }
 
+    position(x: number, y: number) {
+        this.move(x - this.translate.x.value, y - this.translate.y.value);
+    }
+
     getControlValue(name: string) {
         for (const control of this.controls) {
             if (control.name == name) {
                 return control.getValue();
+            }
+        }
+    }
+
+    setControlValue(name: string, value: number | string) {
+        for (const control of this.controls) {
+            if (control.name == name) {
+                control.props.initialValue = value;
+                control.props.value = value;
+            }
+        }
+    }
+
+    setControlVisibility(name: string, visible: boolean) {
+        for (const control of this.controls) {
+            if (control.name == name) {
+                control.visible.value = visible;
             }
         }
     }
@@ -121,6 +142,22 @@ export class NodeConstructor extends BaseConstructor {
         for (const output of this.outputs) {
             if (output.name == name) {
                 return output.setValue(value);
+            }
+        }
+    }
+
+    getInputId(name: string) {
+        for (const input of this.inputs) {
+            if (input.name == name) {
+                return input.getId();
+            }
+        }
+    }
+
+    getOutputId(name: string) {
+        for (const output of this.outputs) {
+            if (output.name == name) {
+                return output.getId();
             }
         }
     }
