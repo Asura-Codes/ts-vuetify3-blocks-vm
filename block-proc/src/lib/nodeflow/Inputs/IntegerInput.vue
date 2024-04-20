@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { VTextField } from 'vuetify/lib/components/index.mjs';
+
 
 </script>
 
 <template>
     <main>
-        <v-text-field :label="label" v-model="value" @update:modelValue="valueChange" :rules="rules" density="compact"
+        <v-text-field ref="integerInput" :label="label" v-model="value" @update:modelValue="valueChange" :rules="rules" density="compact"
             hide-details>
             <template v-slot:prepend>
                 <v-btn icon @click="decrement" density="compact">
@@ -21,7 +23,6 @@
                 </v-btn>
             </template>
         </v-text-field>
-        <!-- <v-input type="number" v-model="value" @update:modelValue="valueChange" :max="min" :min="max"/> -->
     </main>
 </template>
 
@@ -60,7 +61,9 @@ export default {
     methods: {
         valueChange(value) {
             if (this.$props.setValue) {
+                this.value = parseInt(String(value))
                 this.$props.setValue(this.value);
+                (this.$refs.integerInput as VTextField).$forceUpdate();
             }
         },
         decrement(value) {

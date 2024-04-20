@@ -38,7 +38,7 @@ export class PortIn extends NodeConstructor {
     calculate() {
         const typ = this.getControlValue("Type");
         const addr = this.getControlValue("Address");
-        const label = this.id.replaceAll('_', '');
+        const label = `ID${this.id.replaceAll('-', '')}`;
         let letter = 'A';
 
         switch (typ) {

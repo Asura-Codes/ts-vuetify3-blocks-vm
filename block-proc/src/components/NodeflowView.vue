@@ -22,7 +22,7 @@ import { Maths } from "./Blocks/Maths";
 
 <script lang="ts">
 import events from "../plugins/events";
-import { Component, ComponentPublicInstance, UnwrapRef, markRaw } from "vue";
+import { UnwrapRef, markRaw } from "vue";
 import { NodeConstructor } from "@/lib/nodeflow/Node.vue";
 
 interface NodeType {
@@ -112,7 +112,7 @@ export default {
 
         const nodeB = new PortIn();
         this.editor.addNode(nodeB);
-        nodeB.position(20, 580);
+        nodeB.position(20, 600);
 
         nodeB.setControlValue("Type", "BINARY");
 

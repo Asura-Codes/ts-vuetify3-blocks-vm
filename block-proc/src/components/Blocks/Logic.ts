@@ -30,7 +30,7 @@ export class Logic extends NodeConstructor {
 
     calculate() {
         const operation = this.getControlValue("Logic");
-        const label = this.id.replaceAll('_', '');
+        const label = `ID${this.id.replaceAll('-', '')}`;
 
         let oper = 'add';
         

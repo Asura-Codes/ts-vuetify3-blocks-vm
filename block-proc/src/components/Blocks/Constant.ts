@@ -29,26 +29,23 @@ export class Constant extends NodeConstructor {
     }
 
     setAsNumberOption() {
-        // this.addOption("Value", "NumberOption", 0);
-        this.addControl("Value", "NumberInput");
+        this.addControl("Value", "NumberInput", { initialValue: 0, label: "double"});
         this.valueType = eConstantValueType.NumberValue;
     }
     
     setAsIntegerOption() {
-        // this.addOption("Value", "IntegerOption", false);
-        this.addControl("Value", "IntegerInput");
+        this.addControl("Value", "IntegerInput", { initialValue: 0, label: "int"});
         this.valueType = eConstantValueType.IntegerValue;
     }
     
     setAsBooleanOption() {
-        // this.addOption("Value", "CheckboxOption", false);
-        this.addControl("Value", "CheckboxInput");
+        this.addControl("Value", "CheckboxInput", { initialValue: false, label: "boolean"});
         this.valueType = eConstantValueType.BooleanValue;
     }
 
     calculate() {
         const value = this.getControlValue("Value");
-        const label = this.id.replaceAll('_', '');
+        const label = `ID${this.id.replaceAll('-', '')}`;
 
         console.log(`Constant: ${value}`);
 

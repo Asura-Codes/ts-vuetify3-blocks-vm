@@ -16,7 +16,7 @@ import { sortTopologically } from "./topologicalSorting";
     <div ref="nodecanvas" class="nodeflow" :style="translateCanvas">
       <div class="nodes">
         <!-- Nodes -->
-        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" />
+        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" @removeNode="removeNode"/>
       </div>
       <div class="connections">
         <!-- Connections -->
@@ -99,9 +99,9 @@ export default {
       this.selected.x_start = this.selected.x_prev = e_pos_x;
       this.selected.x_start = this.selected.y_prev = e_pos_y;
 
-      if (target?.classList.contains('header')) {
+      if (target?.classList.contains('move-node')) {
         this.selected.target = target;
-        this.selected.component = this.componentsMap.get(target.id);
+        this.selected.component = this.componentsMap.get(target?.dataset.id ?? '');
         this.selected.action = 'move';
       } else if (target?.classList.contains('nodeflow')) {
         this.selected.action = 'translate';

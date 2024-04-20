@@ -7,8 +7,7 @@ import hljs from "highlight.js";
 import CodeEditor from "simple-code-editor/CodeEditor.vue";
 import VueCommand, {
   createStdout,
-  textFormatter,
-  jsonFormatter,
+  textFormatter
 } from "vue-command";
 import hex from "../utils/hex";
 import "vue-command/dist/vue-command.css";
@@ -39,19 +38,6 @@ hljs.registerLanguage("svmasm", svmasm);
       >
         Run Program
       </v-btn>
-      <!-- <v-btn
-        class="ma-2"
-        outlined
-        x-large
-        fab
-        color="primary"
-        @click="printBuffers"
-      >
-        Print Buffers
-      </v-btn>
-      <v-btn class="ma-2" outlined x-large fab color="primary" @click="debug">
-        Debug
-      </v-btn> -->
       <v-btn
         class="ma-2"
         outlined
@@ -87,7 +73,7 @@ hljs.registerLanguage("svmasm", svmasm);
               <v-text-field
                 v-if="row.editable"
                 :value="item"
-                @input="(event: any) => { row.arr[idx] = row.dest[idx] = Number(event.target.value); }"
+                @update:modelValue="(value: string | number) => { row.arr[idx] = row.dest[idx] = Number(value); }"
                 single-line
                 class="num-field"
                 hide-details

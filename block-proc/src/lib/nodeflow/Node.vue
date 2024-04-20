@@ -9,23 +9,31 @@ import { BaseConstructor, RootMap } from './definitions';
 
 <template>
     <main class="nodeflow-node" :style="translate">
-        <div class="header" :id="id">
-            {{ manufacturer.title }}
+        <div class="move-node header" :data-id="id">
+            <v-form density="compact">
+                <v-row justify="end" density="compact">
+                    <v-col class="move-node" :data-id="id">
+                        <v-btn class="ms-2 move-node" :data-id="id" variant="text" density="compact" v-on:click="$emit('optionsNode', manufacturer)">{{ manufacturer.title }}</v-btn>
+                    </v-col>
+                    <v-spacer class="move-node" :data-id="id"/>
+                    <v-col>
+                        <v-btn class="ms-2" icon="mdi-close" variant="text" density="compact" v-on:click="$emit('removeNode', manufacturer)"></v-btn>
+                    </v-col>
+                </v-row>
+            </v-form>
         </div>
         <div class="outputs">
             <!-- Outputs node -->
-            <Output v-for="params of manufacturer.outputs" :manufacturer="params"
-                :components-map="componentsMap" />
+            <Output v-for="params of manufacturer.outputs" :manufacturer="params" :components-map="componentsMap"  class="move-node" :data-id="id"/>
         </div>
-        <v-card class="nodeflow_content_node px-2 mt-2" outlined >
+        <v-card class="nodeflow_content_node px-2 mt-2" outlined>
             <!-- Controls node -->
             <Control v-for="params of manufacturer.controls" v-show="params.visible" :manufacturer="params"
                 :components-map="componentsMap" />
         </v-card>
         <div class="inputs mt-2">
             <!-- Inputs node -->
-            <Input v-for="params of manufacturer.inputs" :manufacturer="params"
-                :components-map="componentsMap" />
+            <Input v-for="params of manufacturer.inputs" :manufacturer="params" :components-map="componentsMap" />
         </div>
     </main>
 </template>
@@ -118,6 +126,9 @@ export class NodeConstructor extends BaseConstructor {
             if (control.name == name) {
                 control.props.initialValue = value;
                 control.props.value = value;
+                if (typeof control.props.onChange == 'function') {
+                    control.props.onChange(value);
+                }
             }
         }
     }
@@ -163,7 +174,7 @@ export class NodeConstructor extends BaseConstructor {
     }
 
     // Empty
-    calculate() {}
+    calculate() { }
 }
 
 // export type NodeInstance = InstanceType<typeof NodeConstructor>;
@@ -181,6 +192,7 @@ export default {
             required: true
         }
     },
+    emits: ["removeNode", 'optionsNode'],
     methods: {
     },
     created() {
@@ -200,7 +212,7 @@ export default {
     watch: {
         manufacturer: {
             handler(cfg, _) {
-                
+
             },
             deep: true
         }

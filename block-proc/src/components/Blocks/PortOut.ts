@@ -15,11 +15,23 @@ export class PortOut extends NodeConstructor {
         // });
         this.addControl("Type", "SelectInput", {
             initialValue: "ANALOG",
-            items: ['ANALOG', 'BINARY']
+            items: ['ANALOG', 'BINARY'],
+            onChange: (value): void => {
+                switch (value) {
+                    case 'ANALOG':
+                        this.setControlVisibility("Bit", false);
+                        break;
+                    case 'BINARY':
+                        this.setControlVisibility("Bit", true);
+                        break;
+                }
+            }
         });
 
         // this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
         this.addControl("Address", "IntegerInput", { initialValue: 0, min: 0, max: 256, label: "Address" });
+        this.addControl("Bit", "IntegerInput", { initialValue: 0, min: 0, max: 256, label: "Bit" });
+        this.setControlVisibility("Bit", false);
 
         // this.addInputInterface("In")
         this.addInput("In")
