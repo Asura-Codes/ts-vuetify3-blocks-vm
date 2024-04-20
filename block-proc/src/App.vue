@@ -6,12 +6,12 @@ import NodeflowView from "@/components/NodeflowView.vue";
 
 <template>
   <v-app>
-    <v-tabs v-model="tab" bg-color="primary">
-      <v-tab value="editorNodeflow">NodeFlow editor</v-tab>
-      <v-tab value="runtime">Runtime (VM)</v-tab>
+    <v-tabs v-model="tab" bg-color="primary" >
+      <v-tab value="editorNodeflow" >NodeFlow editor</v-tab>
+      <v-tab value="runtime" >Runtime (VM)</v-tab>
     </v-tabs>
 
-    <v-window v-model="tab">      
+    <v-window disabled v-model="tab">      
       <v-window-item value="editorNodeflow">
         <v-toolbar>
           <Menu />

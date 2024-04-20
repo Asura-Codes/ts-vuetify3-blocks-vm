@@ -66,26 +66,33 @@ export default {
     connections: new Array<ConnectionConstructor>(),
     componentsMap: markRaw(new Map<string, NodeConstructor | OutputConstructor | InputConstructor | ConnectionConstructor>),
     translate: { x: 0, y: 0 },
+    format: { width: 2480, height: 3508 }, // A4
   }),
   expose: ['addNode', 'removeNode', 'addConnection', 'execute', 'nodes'],
   methods: {
     initialize() {
       this.canvas = markRaw(this.$refs.nodeflow as HTMLElement);
 
-      /* Mouse and Touch Actions */
-      this.canvas.addEventListener("mouseup", this.dragEnd.bind(this));
-      this.canvas.addEventListener("mousemove", (e) => this.position(e));
-      this.canvas.addEventListener("mousedown", this.click.bind(this));
 
-      this.canvas.addEventListener("touchend", this.dragEnd.bind(this));
-      this.canvas.addEventListener("touchmove", (e) => this.position(e), {
-        passive: true,
-      });
-      this.canvas.addEventListener("touchstart", (e) => this.click(e), {
-        passive: true,
-      });
+      const touchTest = () => {
+      /* Mouse and Touch Actions */
+        this.canvas.addEventListener("mouseup", this.dragEnd.bind(this));
+        this.canvas.addEventListener("mousemove", (e) => this.position(e));
+        this.canvas.addEventListener("mousedown", this.click.bind(this));
+
+        this.canvas.addEventListener("touchend", this.dragEnd.bind(this));
+        this.canvas.addEventListener("touchmove", (e) => this.position(e), {
+          passive: true,
+        });
+        this.canvas.addEventListener("touchstart", (e) => this.click(e), {
+          passive: true,
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', touchTest);
     },
     click(e: MouseEvent | TouchEvent) {
+      console.log(`click: ${e}`)
       if (this.selected.action != 'none')
         return
 
@@ -129,6 +136,7 @@ export default {
       // console.log(`click__x: ${e_pos_x} | y: ${e_pos_y}`);
     },
     position(e: MouseEvent | TouchEvent) {
+      console.log(`position: ${e}`)
       if (this.selected.action == 'none')
         return
 
@@ -179,10 +187,11 @@ export default {
       }
     },
     dragEnd(e: MouseEvent | TouchEvent) {
+      console.log(`dragEnd: ${e}`)
       const [e_pos_x, e_pos_y] = this.map_point(this.get_xy_from_event(e));
 
       let ele_last: Element | null;
-      if (e.type === "touchend") {
+      if (e.type === "touchend" && e_pos_x && e_pos_y) {
         ele_last = document.elementFromPoint(e_pos_x, e_pos_y);
       } else {
         ele_last = e.target as Element | null;
@@ -232,9 +241,14 @@ export default {
     get_xy_from_event(e: any): [number, number] {
       let e_pos_x: number;
       let e_pos_y: number;
-      if (e.type === "touchmove") {
-        e_pos_x = e.touches[0].clientX;
-        e_pos_y = e.touches[0].clientY;
+      if (e.type === "touchmove" || e.type === "touchstart" || e.type === "touchend") {
+        if (e.touches.length){
+          e_pos_x = e.touches[0].clientX;
+          e_pos_y = e.touches[0].clientY;
+        } else {
+          e_pos_x = 0;
+          e_pos_y = 0;
+        }
       } else {
         e_pos_x = e.clientX;
         e_pos_y = e.clientY;
@@ -306,7 +320,7 @@ export default {
   },
   computed: {
     translateCanvas() {
-      return `translate: ${this.translate.x}px ${this.translate.y}px`
+      return `translate: ${this.translate.x}px ${this.translate.y}px; min-width: ${this.format.width}px !important; height: ${this.format.height}px  !important;`
     },
     translateBackground() {
       return `background-position: left ${this.translate.x}px top ${this.translate.y}px;`
