@@ -2,6 +2,8 @@
 
 ## In progress
 
+You can now explore a demo on page [https://pisanie.dev/ts-vuetify3-blocks-vm/](https://pisanie.dev/ts-vuetify3-blocks-vm/)
+
 ### block-proc
 
 Generating byte code from nodes editor (mainly: in, out, math and logic). *EARLY STAGE*

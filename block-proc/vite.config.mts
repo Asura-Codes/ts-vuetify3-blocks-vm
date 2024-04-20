@@ -36,6 +36,6 @@ export default defineConfig({
   },
   build: {
     cssCodeSplit: false
-  }
-  // base: "/ts-vuetify3-baklavajs-blocks-vm/"
+  },
+  // base: "/ts-vuetify3-blocks-vm/"
 })
