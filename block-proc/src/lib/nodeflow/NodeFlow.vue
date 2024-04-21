@@ -16,7 +16,7 @@ import { sortTopologically } from "./topologicalSorting";
     <div ref="nodecanvas" class="nodeflow" :style="translateCanvas">
       <div class="nodes">
         <!-- Nodes -->
-        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" @removeNode="removeNode"/>
+        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" @removeNode="removeNode" />
       </div>
       <div class="connections">
         <!-- Connections -->
@@ -61,6 +61,8 @@ export default {
       y_start: 0,
       x_event: 0,
       y_event: 0,
+      x_eend: 0,
+      y_eend: 0,
     }),
     nodes: new Array<NodeConstructor>(),
     connections: new Array<ConnectionConstructor>(),
@@ -75,7 +77,7 @@ export default {
 
 
       const touchTest = () => {
-      /* Mouse and Touch Actions */
+        /* Mouse and Touch Actions */
         this.canvas.addEventListener("mouseup", this.dragEnd.bind(this));
         this.canvas.addEventListener("mousemove", (e) => this.position(e));
         this.canvas.addEventListener("mousedown", this.click.bind(this));
@@ -136,17 +138,19 @@ export default {
       // console.log(`click__x: ${e_pos_x} | y: ${e_pos_y}`);
     },
     position(e: MouseEvent | TouchEvent) {
-      console.log(`position: ${e}`)
       if (this.selected.action == 'none')
         return
 
       // MouseEvent & TouchEvent
-      const ele_over = e.target as HTMLElement | null;
       const e_pos_xy = this.get_xy_from_event(e);
+      this.selected.x_eend = e_pos_xy[0];
+      this.selected.y_eend = e_pos_xy[1];
       const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
       const [delta_x, delta_y] = [e_pos_x - this.selected.x_prev, e_pos_y - this.selected.y_prev];
       this.selected.x_prev = e_pos_x;
       this.selected.y_prev = e_pos_y;
+
+      const ele_over = (e.type === "touchmove") ? document.elementFromPoint(e_pos_xy[0], e_pos_xy[1]) : e.target as HTMLElement | null;
 
       switch (this.selected.action) {
         case 'move':
@@ -165,10 +169,10 @@ export default {
           if (this.selected.component) {
             const connection: ConnectionConstructor = this.selected.component as ConnectionConstructor;
             connection.setEndPoint(e_pos_x, e_pos_y);
-            connection.incorrectTarget(false)
+            connection.incorrectTarget(false);
 
             if (ele_over?.classList.contains('output_handle')) {
-              connection.incorrectTarget(true)
+              connection.incorrectTarget(true);
             } else
               if (ele_over?.classList.contains('input_handle')) {
                 const inputComponent: InputConstructor | undefined = this.componentsMap.get(ele_over.id) as InputConstructor | undefined;
@@ -178,7 +182,7 @@ export default {
                 if (inputComponent && outputComponent) {
                   if (inputComponent.connectionId() || inputComponent.nodeId == outputComponent.nodeId
                   ) {
-                    connection.incorrectTarget(true)
+                    connection.incorrectTarget(true);
                   }
                 }
               }
@@ -188,14 +192,12 @@ export default {
     },
     dragEnd(e: MouseEvent | TouchEvent) {
       console.log(`dragEnd: ${e}`)
-      const [e_pos_x, e_pos_y] = this.map_point(this.get_xy_from_event(e));
+      const e_pos_xy = this.get_xy_from_event(e);
+      const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
 
-      let ele_last: Element | null;
-      if (e.type === "touchend" && e_pos_x && e_pos_y) {
-        ele_last = document.elementFromPoint(e_pos_x, e_pos_y);
-      } else {
-        ele_last = e.target as Element | null;
-      }
+      const ele_last = (e.type === "touchend")
+        ? document.elementFromPoint(e_pos_xy[0], e_pos_xy[1]) 
+        : e.target as HTMLElement | null;
 
       switch (this.selected.action) {
         case 'move':
@@ -227,6 +229,7 @@ export default {
             }
 
             if (removeDrawedConnection) {
+
               this.removeConnection(this.selected.component.getId());
             }
           }
@@ -242,12 +245,12 @@ export default {
       let e_pos_x: number;
       let e_pos_y: number;
       if (e.type === "touchmove" || e.type === "touchstart" || e.type === "touchend") {
-        if (e.touches.length){
+        if (e.touches.length) {
           e_pos_x = e.touches[0].clientX;
           e_pos_y = e.touches[0].clientY;
         } else {
-          e_pos_x = 0;
-          e_pos_y = 0;
+          e_pos_x = this.selected.x_eend;
+          e_pos_y = this.selected.y_eend;
         }
       } else {
         e_pos_x = e.clientX;
@@ -270,7 +273,7 @@ export default {
       const newConnection = new ConnectionConstructor(outputId);
       newConnection.setNodeflow(this.componentsMap);
       this.connections.push(newConnection);
-      newConnection.repaint()
+      newConnection.repaint();
       return newConnection;
     },
     addConnection(outputId?: string, inputId?: string) {
