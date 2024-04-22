@@ -13,9 +13,7 @@ import NodeflowView from "@/components/NodeflowView.vue";
 
     <v-window disabled v-model="tab">      
       <v-window-item value="editorNodeflow">
-        <v-toolbar>
-          <Menu />
-        </v-toolbar>
+        <Menu />
         <v-main>
           <NodeflowView />
         </v-main>

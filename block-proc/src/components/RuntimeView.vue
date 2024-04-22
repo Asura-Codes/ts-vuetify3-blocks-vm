@@ -16,126 +16,85 @@ hljs.registerLanguage("svmasm", svmasm);
 </script>
 
 <template>
-  <div>
-    <v-item-group multiple>
-      <v-btn
-        class="ma-2"
-        outlined
-        x-large
-        fab
-        color="primary"
-        @click="() => ($refs.console as any).dispatch('hex')"
-      >
-        Compile Program
-      </v-btn>
-      <v-btn
-        class="ma-2"
-        outlined
-        x-large
-        fab
-        color="primary"
-        @click="() => ($refs.console as any).dispatch('run')"
-      >
-        Run Program
-      </v-btn>
-      <v-btn
-        class="ma-2"
-        outlined
-        x-large
-        fab
-        color="primary"
-        @click="() => ($refs.console as any).dispatch('help')"
-      >
-        Help
-      </v-btn>
-    </v-item-group>
-    <div class="mx-auto" max-width="98vw" outlined>
-      <v-data-table
-        v-model:page="page"
-        :headers="headers"
-        :items="buffers"
-        class="elevation-1"
-        item-key="name"
-        fixed-header
-        :items-per-page="5"
-        hide-default-footer
-        height="238px"
-      >
-        <!-- <template v-slot:headers></template> -->
-        <template v-slot:column.name="{ column }">
-          {{ column.title.toUpperCase() }}
-        </template>
+  <v-container>
+    <v-row align="start" style="height: 250px;" no-gutters>
+      <v-col md="6">
+        <v-sheet class="pa-2 ma-2">
+          <v-item-group multiple>
+            <v-btn class="ma-2" outlined x-large fab color="primary"
+              @click="() => ($refs.console as any).dispatch('hex')">
+              Compile Program
+            </v-btn>
+            <v-btn class="ma-2" outlined x-large fab color="primary"
+              @click="() => ($refs.console as any).dispatch('run')">
+              Run Program
+            </v-btn>
+            <v-btn class="ma-2" outlined x-large fab color="primary"
+              @click="() => ($refs.console as any).dispatch('help')">
+              Help
+            </v-btn>
+          </v-item-group>
+        </v-sheet>
+      </v-col>
+      <v-col md="6">
+        <v-sheet class="pa-2 ma-2">
+          <v-data-table v-model:page="page" :headers="headers" :items="buffers" class="elevation-1" item-key="name"
+            fixed-header :items-per-page="5" hide-default-footer height="238px">
+            <template v-slot:column.name="{ column }">
+              {{ column.title.toUpperCase() }}
+            </template>
 
-        <template v-slot:body="{ items }">
-          <tr v-for="(row, rowIdx) in items" :key="rowIdx">
-            <td style="width: 120px"> {{ row.name }} </td>
-            <td v-for="(item, idx) in row.arr" :key="idx">
-              <v-text-field
-                v-if="row.editable"
-                :value="item"
-                @update:modelValue="(value: string | number) => { row.arr[idx] = row.dest[idx] = Number(value); }"
-                single-line
-                class="num-field"
-                hide-details
-                type="number"
-              ></v-text-field>
-              <span v-else>{{ item }}</span>
-            </td>
-          </tr>
-        </template>
+            <template v-slot:body="{ items }">
+              <tr v-for="(row, rowIdx) in items" :key="rowIdx">
+                <td style="width: 120px"> {{ row.name }} </td>
+                <td v-for="(item, idx) in row.arr" :key="idx">
+                  <v-text-field v-if="row.editable" :value="item"
+                    @update:modelValue="(value: string | number) => { row.arr[idx] = row.dest[idx] = Number(value); }"
+                    single-line hide-details type="number"></v-text-field>
+                  <span v-else>{{ item }}</span>
+                </td>
+              </tr>
+            </template>
 
-        <template v-slot:bottom></template>
-      </v-data-table>
-    </div>
+            <template v-slot:bottom></template>
+          </v-data-table>
+        </v-sheet>
+      </v-col>
+    </v-row>
+    <v-row align="start" style="height: 450px;" no-gutters>
+      <v-col md="6">
+        <v-sheet class="pa-2 ma-2">
+          <CodeEditor v-model="code" :line-nums="true" :languages="[['svmasm', 'SVM']]" :tab-spaces="4" :wrap="false"
+            :header="true" :display-language="true" theme="github-dark-dimmed" font-size="22px" width="100%"
+            height="100%" padding="8px" border-radius="4px" :copy-code="true" :lang-list-display="false"
+            color="white" />
+        </v-sheet>
+      </v-col>
+      <v-col md="6">
+        <v-sheet class="pa-2 ma-2">
+          <vue-command ref="console" :commands="commands" hide-bar style="height: 100%; width: 96%" />
+        </v-sheet>
+      </v-col>
+    </v-row>
+    <!-- 
     <div id="editor">
       <v-row align="start" style="height: 100%">
         <v-col class="pa-0 ma-0" cols="4" style="height: 100%">
           <v-sheet class="pa-0 ma-0" style="height: 100%">
-            <CodeEditor
-              v-model="code"
-              :line-nums="true"
-              :languages="[['svmasm', 'SVM']]"
-              :tab-spaces="4"
-              :wrap="false"
-              :header="true"
-              :display-language="true"
-              theme="github-dark-dimmed"
-              font-size="22px"
-              width="100%"
-              height="100%"
-              padding="8px"
-              border-radius="4px"
-              :copy-code="true"
-              :lang-list-display="false"
-              color="white"
-            ></CodeEditor>
+
           </v-sheet>
         </v-col>
         <v-col class="pa-0 ma-0" style="height: 100%">
           <v-sheet class="pa-0 ma-0" style="height: 100%">
-            <vue-command
-              ref="console"
-              :commands="commands"
-              hide-bar
-              style="height: 100%; width: 96%"
-            />
           </v-sheet>
         </v-col>
       </v-row>
-    </div>
-  </div>
+    </div> -->
+  </v-container>
 </template>
 
 <style scoped>
-#editor {
-  display: block;
-  height: calc(100vh - 330px);
-  line-height: normal !important;
-}
-.num-field {
-  margin-left: 0px !important;
-  margin-right: 0px !important;
-}
+
 </style>
 
 <script lang="ts">
