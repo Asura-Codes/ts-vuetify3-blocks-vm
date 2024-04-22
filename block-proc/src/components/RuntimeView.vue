@@ -17,27 +17,9 @@ hljs.registerLanguage("svmasm", svmasm);
 
 <template>
   <v-container>
-    <v-row align="start" style="height: 250px;" no-gutters>
-      <v-col md="6">
-        <v-sheet class="pa-2 ma-2">
-          <v-item-group multiple>
-            <v-btn class="ma-2" outlined x-large fab color="primary"
-              @click="() => ($refs.console as any).dispatch('hex')">
-              Compile Program
-            </v-btn>
-            <v-btn class="ma-2" outlined x-large fab color="primary"
-              @click="() => ($refs.console as any).dispatch('run')">
-              Run Program
-            </v-btn>
-            <v-btn class="ma-2" outlined x-large fab color="primary"
-              @click="() => ($refs.console as any).dispatch('help')">
-              Help
-            </v-btn>
-          </v-item-group>
-        </v-sheet>
-      </v-col>
-      <v-col md="6">
-        <v-sheet class="pa-2 ma-2">
+    <v-row align="start" no-gutters>
+      <v-col xl="12">
+        <v-sheet class="pa-2 ma-2" style="height: 250px;">
           <v-data-table v-model:page="page" :headers="headers" :items="buffers" class="elevation-1" item-key="name"
             fixed-header :items-per-page="5" hide-default-footer height="238px">
             <template v-slot:column.name="{ column }">
@@ -46,11 +28,11 @@ hljs.registerLanguage("svmasm", svmasm);
 
             <template v-slot:body="{ items }">
               <tr v-for="(row, rowIdx) in items" :key="rowIdx">
-                <td style="width: 120px"> {{ row.name }} </td>
+                <td style="min-width: 120px"> {{ row.name }} </td>
                 <td v-for="(item, idx) in row.arr" :key="idx">
                   <v-text-field v-if="row.editable" :value="item"
                     @update:modelValue="(value: string | number) => { row.arr[idx] = row.dest[idx] = Number(value); }"
-                    single-line hide-details type="number"></v-text-field>
+                    single-line hide-details type="number" style="min-width: 120px" />
                   <span v-else>{{ item }}</span>
                 </td>
               </tr>
@@ -60,20 +42,40 @@ hljs.registerLanguage("svmasm", svmasm);
           </v-data-table>
         </v-sheet>
       </v-col>
-    </v-row>
-    <v-row align="start" style="height: 450px;" no-gutters>
-      <v-col md="6">
-        <v-sheet class="pa-2 ma-2">
+      <v-col xl="6">
+        <v-sheet class="pa-2 ma-2" style="height: 536px;">
           <CodeEditor v-model="code" :line-nums="true" :languages="[['svmasm', 'SVM']]" :tab-spaces="4" :wrap="false"
-            :header="true" :display-language="true" theme="github-dark-dimmed" font-size="22px" width="100%"
+            :header="true" :display-language="true" theme="github-dark-dimmed" font-size="1rem" width="100%"
             height="100%" padding="8px" border-radius="4px" :copy-code="true" :lang-list-display="false"
             color="white" />
         </v-sheet>
       </v-col>
-      <v-col md="6">
-        <v-sheet class="pa-2 ma-2">
-          <vue-command ref="console" :commands="commands" hide-bar style="height: 100%; width: 96%" />
-        </v-sheet>
+      <v-col xl="6">
+        <v-row align="start" no-gutters>
+          <v-col sm="12">
+            <v-sheet class="pa-2 ma-2" :border="true">
+              <v-item-group multiple>
+                <v-btn class="ma-2" outlined x-large fab color="primary"
+                  @click="() => ($refs.console as any).dispatch('hex')">
+                  Compile Program
+                </v-btn>
+                <v-btn class="ma-2" outlined x-large fab color="primary"
+                  @click="() => ($refs.console as any).dispatch('run')">
+                  Run Program
+                </v-btn>
+                <v-btn class="ma-2" outlined x-large fab color="primary"
+                  @click="() => ($refs.console as any).dispatch('help')">
+                  Help
+                </v-btn>
+              </v-item-group>
+            </v-sheet>
+          </v-col>
+          <v-col sm="12">
+            <v-sheet class="pa-2 ma-2" style="height: 350px; min-width: 250px;" :border="true">
+              <vue-command ref="console" :commands="commands" hide-bar style="height: 100%; width: 100%" />
+            </v-sheet>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
     <!-- 
@@ -93,9 +95,7 @@ hljs.registerLanguage("svmasm", svmasm);
   </v-container>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
 
 <script lang="ts">
 export default {
