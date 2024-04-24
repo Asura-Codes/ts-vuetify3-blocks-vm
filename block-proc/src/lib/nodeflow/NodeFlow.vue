@@ -52,7 +52,7 @@ export default {
     id: "",
     canvas: markRaw(document.createElement('div')) as HTMLElement,
     selected: markRaw({
-      action: 'none' as 'none' | 'translate' | 'move' | 'connection',
+      action: 'none' as 'none' | 'translate' | 'move' | 'connection' | 'scaling',
       target: undefined as HTMLElement | SVGLineElement | undefined,
       component: undefined as NodeConstructor | OutputConstructor | InputConstructor | ConnectionConstructor | undefined,
       x_prev: 0,
@@ -63,12 +63,14 @@ export default {
       y_event: 0,
       x_eend: 0,
       y_eend: 0,
+      distance_zoom: 0,
     }),
     nodes: new Array<NodeConstructor>(),
     connections: new Array<ConnectionConstructor>(),
     componentsMap: markRaw(new Map<string, NodeConstructor | OutputConstructor | InputConstructor | ConnectionConstructor>),
     translate: { x: 0, y: 0 },
     format: { width: 2480, height: 3508 }, // A4
+    scale: { value: 1.0, x: 0, y: 0 },
   }),
   expose: ['addNode', 'removeNode', 'addConnection', 'execute', 'nodes'],
   methods: {
@@ -78,23 +80,74 @@ export default {
 
       const touchTest = () => {
         /* Mouse and Touch Actions */
-        this.canvas.addEventListener("mouseup", this.dragEnd.bind(this));
+        this.canvas.addEventListener("mouseup", (e) => this.dragEnd(e));
         this.canvas.addEventListener("mousemove", (e) => this.position(e));
-        this.canvas.addEventListener("mousedown", this.click.bind(this));
+        this.canvas.addEventListener("mousedown", (e) => this.click(e));
+        this.canvas.addEventListener("wheel", (e) => this.zoom(e));
 
-        this.canvas.addEventListener("touchend", this.dragEnd.bind(this));
-        this.canvas.addEventListener("touchmove", (e) => this.position(e), {
-          passive: true,
-        });
         this.canvas.addEventListener("touchstart", (e) => this.click(e), {
           passive: true,
         });
+        this.canvas.addEventListener("touchend", (e) => this.dragEnd(e), {
+          passive: true,
+        });
+        this.canvas.addEventListener("touchmove", (e) => this.position(e), {
+          passive: true,
+        });
+
+        // this.canvas.addEventListener("gesturestart", (e) => { }, {
+        //   passive: true,
+        // });
+        // this.canvas.addEventListener("gestureend", (e) => { }, {
+        //   passive: true,
+        // });
+        // this.canvas.addEventListener("gesturechange", (e) => this.zoom(e), {
+        //   passive: true,
+        // });
       }
 
       document.addEventListener('DOMContentLoaded', touchTest);
     },
+    zoom(e: Event | WheelEvent | TouchEvent) {
+      let bZoom = false;
+      let newScale = 1;
+
+      if (e instanceof TouchEvent) {
+        const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+        newScale = this.scale.value * Math.exp(-Math.sign(this.selected.distance_zoom - dist) * 0.02);
+        this.selected.distance_zoom = dist;
+        // this.debug({touches: [e.touches[0].pageX, e.touches[1].pageX, e.touches[0].pageY, e.touches[1].pageY], distance_zoom: dist});
+        bZoom = true;
+      }
+      if (e instanceof WheelEvent) {
+        newScale = this.scale.value * Math.exp(-Math.sign(e.deltaY) * 0.02);
+        bZoom = true;
+      }
+
+      if (bZoom) {
+        const e_pos_xy = this.get_xy_from_event(e);
+        const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
+
+        this.scale.x = e_pos_x;
+        this.scale.y = e_pos_y;
+        this.scale.value = newScale;
+
+        // this.debug({newScale: newScale, e_pos_x: e_pos_x, e_pos_y: e_pos_y, scale_x: this.scale.x, scale_y: this.scale.y });
+        // console.log(`newScale: ${newScale} | e_pos_x: ${e_pos_x} | e_pos_y: ${e_pos_y} | scale.x: ${this.scale.x} | scale.y: ${this.scale.y}`)
+      }
+    },
     click(e: MouseEvent | TouchEvent) {
       console.log(`click: ${e}`)
+
+      if ((e as TouchEvent).touches?.length === 2) {
+        this.dragEnd(e);
+        const et: TouchEvent = e as TouchEvent;
+        this.selected.action = 'scaling';
+        this.selected.distance_zoom = Math.hypot(et.touches[0].pageX - et.touches[1].pageX, et.touches[0].pageY - et.touches[1].pageY);
+        // this.debug({click: "zooming", distance_zoom: this.selected.distance_zoom });
+        return
+      }
+      
       if (this.selected.action != 'none')
         return
 
@@ -114,8 +167,8 @@ export default {
         this.selected.action = 'move';
       } else if (target?.classList.contains('nodeflow')) {
         this.selected.action = 'translate';
-        this.selected.x_start = Number(this.translate.x);
-        this.selected.y_start = Number(this.translate.y);
+        this.selected.x_start = this.translate.x;
+        this.selected.y_start = this.translate.y;
       } else if (target?.classList.contains('output_handle')) {
         this.selected.component = this.startConnection(target.id);
         this.selected.action = 'connection';
@@ -141,6 +194,11 @@ export default {
       if (this.selected.action == 'none')
         return
 
+      if (this.selected.action == 'scaling') {
+        this.zoom(e);
+        return
+      }
+
       // MouseEvent & TouchEvent
       const e_pos_xy = this.get_xy_from_event(e);
       this.selected.x_eend = e_pos_xy[0];
@@ -162,8 +220,8 @@ export default {
           }
           break;
         case 'translate':
-          this.translate.x = e_pos_xy[0] - this.selected.x_event + this.selected.x_start;
-          this.translate.y = e_pos_xy[1] - this.selected.y_event + this.selected.y_start;
+          this.translate.x = (e_pos_xy[0] - this.selected.x_event) / this.scale.value + this.selected.x_start;
+          this.translate.y = (e_pos_xy[1] - this.selected.y_event) / this.scale.value + this.selected.y_start;
           break;
         case 'connection':
           if (this.selected.component) {
@@ -191,12 +249,19 @@ export default {
       }
     },
     dragEnd(e: MouseEvent | TouchEvent) {
+      if (this.selected.action == 'scaling') {
+        this.selected.action = 'none';
+        // this.debug({dragEnd: 'scaling'});
+        this.zoom(e);
+        return
+      }
+
       console.log(`dragEnd: ${e}`)
       const e_pos_xy = this.get_xy_from_event(e);
       const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
 
       const ele_last = (e.type === "touchend")
-        ? document.elementFromPoint(e_pos_xy[0], e_pos_xy[1]) 
+        ? document.elementFromPoint(e_pos_xy[0], e_pos_xy[1])
         : e.target as HTMLElement | null;
 
       switch (this.selected.action) {
@@ -264,7 +329,7 @@ export default {
 
       if (view) {
         const rect = view.getBoundingClientRect();
-        return [xy[0] - this.translate.x - rect.left, xy[1] - this.translate.y - rect.top];
+        return [(xy[0] - rect.left) / this.scale.value - this.translate.x, (xy[1] - rect.top) / this.scale.value - this.translate.y];
       }
 
       return [xy[0], xy[1]];
@@ -319,11 +384,27 @@ export default {
       } catch (ex) {
         console.error(ex);
       }
+    },
+    debug(obj: any) {
+      try {
+        const debugMobile = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(obj)
+        };
+        console.log(debugMobile)
+        fetch(`${window.location.protocol}//${window.location.hostname}:3001/`, debugMobile)
+          .then(res => res.json())
+          .then(res => console.log(`res: ${res}`))
+          .catch(ex => console.log(ex));
+      } catch (ex) {
+        console.error(ex);
+      }
     }
   },
   computed: {
     translateCanvas() {
-      return `translate: ${this.translate.x}px ${this.translate.y}px; min-width: ${this.format.width}px !important; height: ${this.format.height}px  !important;`
+      return `transform-origin: 0px 0px; transform: scale(${this.scale.value}, ${this.scale.value}) translate(${this.translate.x}px, ${this.translate.y}px); min-width: ${this.format.width}px !important; height: ${this.format.height}px  !important;`
     },
     translateBackground() {
       return `background-position: left ${this.translate.x}px top ${this.translate.y}px;`
