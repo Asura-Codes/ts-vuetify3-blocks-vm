@@ -125,15 +125,40 @@ export default {
       }
 
       if (bZoom) {
-        const e_pos_xy = this.get_xy_from_event(e);
-        const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
-
-        this.scale.x = e_pos_x;
-        this.scale.y = e_pos_y;
+        const scaleChange = newScale / this.scale.value;
         this.scale.value = newScale;
+          
+        const view = this.$refs.nodeflow as HTMLElement;
+
+        if (view) {
+          const calc_height = function inViewport(el: HTMLElement) {
+            const H = window.innerHeight;
+            const r = el.getBoundingClientRect(), t=r.top, b=r.bottom;
+            return Math.max(0, t>0? H-t : Math.min(b, H));
+          }
+          const rect = view.getBoundingClientRect();
+
+          const width = rect.width;
+          const height = calc_height(view);
+              
+          const e_pos_xy = this.get_xy_from_event(e);
+
+          const width_off = e_pos_xy[0] / width;
+          const height_off = (e_pos_xy[1] - rect.top) / height;
+
+          // console.log(`width_off: ${width_off}; height_off: ${height_off}`)
+
+          const [e_pos_x, e_pos_y] = this.map_point(e_pos_xy);
+          this.scale.x = width / newScale * width_off;// - ( e_pos_x * newScale );
+          this.scale.y = height / newScale * height_off;// - (e_pos_y * newScale );
+          this.translate.x -= this.scale.x * (scaleChange - 1.0);// - ( e_pos_x * newScale );
+          this.translate.y -= this.scale.y * (scaleChange - 1.0);// - (e_pos_y * newScale );
+
+
+          // console.log(`newScale: ${newScale} | e_pos_x: ${e_pos_x} | e_pos_y: ${e_pos_y} | scale.x: ${this.scale.x} | scale.y: ${this.scale.y}`)
+       }
 
         // this.debug({newScale: newScale, e_pos_x: e_pos_x, e_pos_y: e_pos_y, scale_x: this.scale.x, scale_y: this.scale.y });
-        // console.log(`newScale: ${newScale} | e_pos_x: ${e_pos_x} | e_pos_y: ${e_pos_y} | scale.x: ${this.scale.x} | scale.y: ${this.scale.y}`)
       }
     },
     click(e: MouseEvent | TouchEvent) {
