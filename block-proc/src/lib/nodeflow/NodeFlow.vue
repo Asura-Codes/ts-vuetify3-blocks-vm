@@ -16,7 +16,7 @@ import { sortTopologically } from "./topologicalSorting";
     <div ref="nodecanvas" class="nodeflow" :style="translateCanvas">
       <div class="nodes">
         <!-- Nodes -->
-        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" @removeNode="removeNode" />
+        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" @removeNode="removeNode" @duplicateNode="duplicateNode" />
       </div>
       <div class="connections">
         <!-- Connections -->
@@ -396,6 +396,20 @@ export default {
       }
       const idx = this.nodes.findIndex(n => n === node);
       if (idx != -1) this.nodes.splice(idx, 1);
+    },
+    duplicateNode(node: UnwrapRef<NodeConstructor> | NodeConstructor) {
+      const nodeToCopy = this.nodes.find(n => n === node);
+      if (nodeToCopy) {
+        const serialized = JSON.stringify(nodeToCopy);
+        const copiedNode: NodeConstructor | undefined = 
+          (<typeof NodeConstructor> nodeToCopy.constructor).fromJSON(JSON.parse(serialized)) as NodeConstructor | undefined;
+        if (copiedNode) {
+          copiedNode.resetIdentity();
+          copiedNode.translate.x.value += 20;
+          copiedNode.translate.y.value += 20;
+          this.addNode(copiedNode);
+        }
+      }
     },
     execute() {
       try {

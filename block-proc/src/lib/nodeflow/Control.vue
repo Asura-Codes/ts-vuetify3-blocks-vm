@@ -47,6 +47,17 @@ class ControlProxy implements ControlProperties {
             this.onChange(value);
         }
     }
+
+    public toJSON(): Object {
+        return {
+            initialValue: this.initialValue,
+            value: this.value,
+            items: this.items,
+            min: this.min,
+            max: this.max,
+            label: this.label,
+        };
+    }
 }
 
 export class ControlConstructor extends BaseConstructor {
@@ -67,6 +78,22 @@ export class ControlConstructor extends BaseConstructor {
     getValue() {
         // Must be set by vue component. Ex in Input directory
         return this.props.value;
+    }
+
+    public toJSON(): Object {
+        return {
+            ...super.toJSON(),
+            name: this.name,
+            type: this.type,
+            props: this.props,
+            visible: this.visible
+        };
+    }
+    
+    public static fromJSON(d: Object & ControlConstructor): ControlConstructor {
+        const control = new ControlConstructor(d.nodeId, d.name, d.type, d.props);
+        BaseConstructor.fromJSON(d, control);
+        return control;
     }
 }
 

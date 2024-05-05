@@ -57,4 +57,8 @@ export class PortOut extends NodeConstructor {
 
         console.log(`PortOut: ${this.code}`);
     }
+
+    public static fromJSON(d: Object & PortOut): PortOut | undefined {
+        return NodeConstructor.fromJSON(d, new PortOut()) as PortOut;
+    }
 }

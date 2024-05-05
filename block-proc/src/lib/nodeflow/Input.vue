@@ -65,6 +65,20 @@ export class InputConstructor extends BaseConstructor {
             }
         }
     }
+    
+    public toJSON(): Object {
+        return {
+            ...super.toJSON(),
+            name: this.name,
+            connId: this.connId
+        };
+    }
+    
+    public static fromJSON(d: Object & InputConstructor): InputConstructor {
+        const input = new InputConstructor(d.nodeId, d.name, d.connId);
+        BaseConstructor.fromJSON(d, input);
+        return input;
+    }
 }
 
 export default {

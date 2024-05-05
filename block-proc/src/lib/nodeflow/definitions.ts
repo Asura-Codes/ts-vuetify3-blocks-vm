@@ -36,4 +36,24 @@ export class BaseConstructor {
         }
         return undefined;
     }
+    
+    public resetIdentity() {
+        this.id = ref(fast_uuid()) as Ref<string> & string;
+        if (this.root) {
+            this.setNodeflow(this.root)
+        }
+    }
+    
+    public toJSON(): Object {
+        return {
+            id: String(this.id),
+            nodeId: this.nodeId
+        };
+    }
+    
+    public static fromJSON(d: Object, base: BaseConstructor): BaseConstructor | undefined {
+        base.id.value = d['id'] as Ref<string> & string;
+        base.nodeId = d['nodeId'];
+        return base;
+    }
 }

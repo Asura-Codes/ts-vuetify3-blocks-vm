@@ -70,4 +70,8 @@ export class Maths extends NodeConstructor {
 
         this.setOutputValue("Out", label);
     }
+
+    public static fromJSON(d: Object & Maths): Maths | undefined {
+        return NodeConstructor.fromJSON(d, new Maths(d.noInputs)) as Maths;
+    }
 }

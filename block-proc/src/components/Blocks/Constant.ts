@@ -65,4 +65,17 @@ export class Constant extends NodeConstructor {
 
         this.setOutputValue("Out", label);
     }
+
+    public toJSON(): Object {
+        return {
+            ...super.toJSON(),
+            type: this.type,
+            valueType: this.valueType,
+            code: this.code
+        };
+    }
+
+    public static fromJSON(d: Object & Constant): Constant | undefined {
+        return NodeConstructor.fromJSON(d, new Constant(d.valueType)) as Constant;
+    }
 }

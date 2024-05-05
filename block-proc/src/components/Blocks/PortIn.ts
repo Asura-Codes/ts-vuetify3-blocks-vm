@@ -57,4 +57,8 @@ export class PortIn extends NodeConstructor {
         
         this.setOutputValue("Out", label);
     }
+
+    public static fromJSON(d: Object & PortIn): PortIn | undefined {
+        return NodeConstructor.fromJSON(d, new PortIn()) as PortIn;
+    }
 }

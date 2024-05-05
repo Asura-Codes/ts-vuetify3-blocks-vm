@@ -67,4 +67,8 @@ export class Logic extends NodeConstructor {
 
         this.setOutputValue("Out", label);
     }
+
+    public static fromJSON(d: Object & Logic): Logic | undefined {
+        return NodeConstructor.fromJSON(d, new Logic(d.noInputs)) as Logic;
+    }
 }

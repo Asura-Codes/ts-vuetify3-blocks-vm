@@ -72,6 +72,20 @@ export class OutputConstructor extends BaseConstructor {
     setValue(value: any) {
         return this.value = value;
     }
+    
+    public toJSON(): Object {
+        return {
+            ...super.toJSON(),
+            connectionId: this.connectionId,
+            value: this.value
+        };
+    }
+    
+    public static fromJSON(d: Object & OutputConstructor): OutputConstructor {
+        const output = new OutputConstructor(d.nodeId, d.name, d.connectionId);
+        BaseConstructor.fromJSON(d, output);
+        return output;
+    }
 }
 
 export default {
