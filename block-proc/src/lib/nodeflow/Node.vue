@@ -12,7 +12,7 @@ import { BaseConstructor, RootMap } from './definitions';
         <div class="move-node header" :data-id="id">
             <v-form density="compact">
                 <v-row justify="end" density="compact">
-                    <v-col class="move-node" :data-id="id" max-width="28">
+                    <v-col cols="3" class="move-node" :data-id="id" max-width="28">
                         <v-sheet class="mx-auto" max-width="28" color="transparent">
                             <v-menu transition="slide-y-transition">
                                 <template v-slot:activator="{ props }">
@@ -30,13 +30,19 @@ import { BaseConstructor, RootMap } from './definitions';
                             </v-menu>
                         </v-sheet>
                     </v-col>
-                    <v-col class="move-node" :data-id="id">
+                    <v-col cols="6" v-if="!editing" class="move-node" :data-id="id">
                         <v-sheet class="mx-auto" color="transparent">
                             <v-label class="move-node" :data-id="id">{{ manufacturer.title }}</v-label>
                         </v-sheet>
                     </v-col>
-                    <v-spacer class="move-node" :data-id="id" />
-                    <v-col>
+                    <v-spacer v-if="!editing" class="move-node" :data-id="id" />
+                    <v-col cols="6" v-else class="move-node" :data-id="id">
+                        <v-sheet class="mx-auto" color="transparent">
+                            <v-text-field class="header-text"  @keydown="handleKeydown($event)" single-line hide-details="auto"
+                                v-model="manufacturer.title" min-width="180px" persistent-placeholder rounded="0"/>
+                        </v-sheet>
+                    </v-col>
+                    <v-col cols="3">
                         <v-sheet class="mx-auto" color="transparent">
                             <v-btn class="ms-2" icon="mdi-close" variant="text" density="compact"
                                 v-on:click="$emit('removeNode', manufacturer)" />
@@ -63,6 +69,13 @@ import { BaseConstructor, RootMap } from './definitions';
     </main>
 </template>
 
+<style>
+.header-text .v-input__control .v-field .v-field__field input  {
+    height: 28px !important; /** Sadly, I don't know how to handle height*/
+    min-height: 28px !important; /** Sadly */
+}
+</style>
+
 <script lang="ts">
 export class NodeConstructor extends BaseConstructor {
     static class: string = this.constructor.name;
@@ -74,9 +87,9 @@ export class NodeConstructor extends BaseConstructor {
     translate: { x: Ref<number> | any, y: Ref<number> | any };
 
     constructor(
-        title: string, 
-        inputs?: InputConstructor[], 
-        outputs?: OutputConstructor[], 
+        title: string,
+        inputs?: InputConstructor[],
+        outputs?: OutputConstructor[],
         controls?: ControlConstructor[],
     ) {
         super();
@@ -118,7 +131,8 @@ export class NodeConstructor extends BaseConstructor {
         this.connections.set(connId, type);
     }
 
-    removeConnection(connId: string) {
+    // Input or Output callback
+    connectionRemoved(connId: string) {
         this.connections.delete(connId);
     }
 
@@ -206,10 +220,30 @@ export class NodeConstructor extends BaseConstructor {
 
     public resetIdentity() {
         super.resetIdentity();
-        this.outputs.forEach(output => output.resetIdentity());
-        this.inputs.forEach(input => input.resetIdentity());
+        this.outputs.forEach(output => {
+            output.resetIdentity();
+            output.nodeId = this.id.value;
+        });
+        this.inputs.forEach(input => {
+            input.resetIdentity();
+            input.nodeId = this.id.value;
+        });
         this.controls.forEach(control => control.resetIdentity());
-        this.connections.clear();
+    }
+
+    public resetConnections() {
+        if (this.root) {
+            return Array.from(this.connections.keys());
+        } else {
+            this.outputs.forEach(output => {
+                const connections = output.connectionId.slice();
+                for (const conn of connections) {
+                    output.removeConnection(conn);
+                }
+            });
+            this.inputs.forEach(input => input.setConnectionId());
+            this.connections.clear();
+        }
     }
 
     public toJSON(): Object {
@@ -260,6 +294,7 @@ export default {
             { title: 'Unpin all', icon: "mdi-vector-polyline-remove", action: "unpin" },
             { title: 'Remove', icon: "mdi-selection-remove", action: "remove" },
         ],
+        editing: false,
     }),
     props: {
         manufacturer: {
@@ -271,17 +306,28 @@ export default {
             required: true
         }
     },
-    emits: ["removeNode", 'optionsNode', 'duplicateNode'],
+    emits: ["removeNode", 'optionsNode', 'duplicateNode', 'removeConnection'],
     methods: {
         menuActionClick(action: string) {
             console.log(action);
             switch (action) {
-                case 'edit': break;
+                case 'edit': this.editing = true; break;
                 case 'duplicate': this.$emit('duplicateNode', this.manufacturer); break;
-                case 'unpin': break;
+                case 'unpin':
+                    const connections = this.manufacturer.resetConnections();
+                    connections?.forEach(connId => {
+                        this.$emit('removeConnection', connId);
+                    })
+                    break;
                 case 'remove': this.$emit('removeNode', this.manufacturer); break;
             }
-        }
+        },
+        handleKeydown(e: any) {
+            if (e.code === "Escape" || e.code === "Enter") {
+                this.editing = false;
+                e.preventDefault();
+            }
+        },
     },
     created() {
     },

@@ -46,7 +46,7 @@ export class OutputConstructor extends BaseConstructor {
             const deleted = this.connectionId.splice(index, 1);
             const node: NodeConstructor | undefined = this.getById(this.nodeId) as any;
             if (node && deleted) {
-                node.addConnection(deleted[0], "output")
+                node.connectionRemoved(deleted[0])
             }
         }
     }

@@ -33,7 +33,7 @@ export class InputConstructor extends BaseConstructor {
             if (connId) {
                 node.addConnection(connId, "input")
             } else if (this.connId) {
-                node.removeConnection(this.connId)
+                node.connectionRemoved(this.connId)
             }
         }
         this.connId = connId;

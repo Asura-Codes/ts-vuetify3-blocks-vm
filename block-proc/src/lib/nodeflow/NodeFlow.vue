@@ -16,7 +16,7 @@ import { sortTopologically } from "./topologicalSorting";
     <div ref="nodecanvas" class="nodeflow" :style="translateCanvas">
       <div class="nodes">
         <!-- Nodes -->
-        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" @removeNode="removeNode" @duplicateNode="duplicateNode" />
+        <node v-for="node of nodes" :manufacturer="node" :components-map="componentsMap" @removeNode="removeNode" @duplicateNode="duplicateNode" @removeConnection="removeConnection" />
       </div>
       <div class="connections">
         <!-- Connections -->
@@ -94,16 +94,6 @@ export default {
         this.canvas.addEventListener("touchmove", (e) => this.position(e), {
           passive: true,
         });
-
-        // this.canvas.addEventListener("gesturestart", (e) => { }, {
-        //   passive: true,
-        // });
-        // this.canvas.addEventListener("gestureend", (e) => { }, {
-        //   passive: true,
-        // });
-        // this.canvas.addEventListener("gesturechange", (e) => this.zoom(e), {
-        //   passive: true,
-        // });
       }
 
       document.addEventListener('DOMContentLoaded', touchTest);
@@ -405,6 +395,7 @@ export default {
           (<typeof NodeConstructor> nodeToCopy.constructor).fromJSON(JSON.parse(serialized)) as NodeConstructor | undefined;
         if (copiedNode) {
           copiedNode.resetIdentity();
+          copiedNode.resetConnections();
           copiedNode.translate.x.value += 20;
           copiedNode.translate.y.value += 20;
           this.addNode(copiedNode);
