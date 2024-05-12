@@ -38,7 +38,7 @@ import { BaseConstructor, RootMap } from './definitions';
                     <v-spacer v-if="!editing" class="move-node" :data-id="id" />
                     <v-col cols="6" v-else class="move-node" :data-id="id">
                         <v-sheet class="mx-auto" color="transparent">
-                            <v-text-field class="header-text"  @keydown="handleKeydown($event)" single-line hide-details="auto"
+                            <v-text-field id="editName" class="header-text"  @keydown="handleKeydown($event)" autofocus single-line hide-details="auto"
                                 v-model="manufacturer.title" min-width="180px" persistent-placeholder rounded="0"/>
                         </v-sheet>
                     </v-col>
@@ -323,11 +323,41 @@ export default {
             }
         },
         handleKeydown(e: any) {
-            if (e.code === "Escape" || e.code === "Enter") {
+            if (e.code === "Escape" || e.code === "Enter" || e.keyCode == 13 || e.keyCode == 27) {
                 this.editing = false;
                 e.preventDefault();
             }
+            
+            // this.debug({ 
+            //     key: e.key ?? 'Undefined',
+            //     code: e.code ?? 'Undefined',
+            //     keyCode: e.keyCode ?? 'Undefined',
+            //     location: e.location ?? 'Undefined',
+            //     metaKey: e.metaKey ?? 'Undefined',
+            //     repeat: e.repeat ?? 'Undefined',
+            //     returnValue: e.returnValue ?? 'Undefined',
+            //     shiftKey: e.shiftKey ?? 'Undefined',
+            //     timeStamp: e.timeStamp ?? 'Undefined',
+            //     type: e.type ?? 'Undefined',
+            //     which: e.which ?? 'Undefined'
+            //  });
         },
+        debug(obj: any) {
+        try {
+            const debugMobile = {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(obj)
+            };
+            console.log(debugMobile)
+            fetch(`${window.location.protocol}//${window.location.hostname}:3001/`, debugMobile)
+            .then(res => res.json())
+            .then(res => console.log(`res: ${res}`))
+            .catch(ex => console.log(ex));
+        } catch (ex) {
+            console.error(ex);
+        }
+        }
     },
     created() {
     },
