@@ -12,20 +12,16 @@ export class Logic extends NodeConstructor {
         this.code = '';
         this.noInputs = inputs;
         
-        // this.addOutputInterface("Out");
         this.addOutput("Out");
         
-        // this.addOption("Logic", "SelectOption", "AND", undefined, {
-        //     items: ["AND", "OR", "XOR"]
-        // });
         this.addControl("Logic", "SelectInput", {
             initialValue: "AND",
             items: ["AND", "OR", "XOR"]
         });
 
-        for (let i = 1; i <= this.noInputs; i++) 
+        for (let i = 1; i <= this.noInputs; i++) { 
             this.addInput("In " + i.toString())
-            // this.addInputInterface("In " + i.toString())
+        }
     }
 
     calculate() {

@@ -31,7 +31,7 @@ class ControlProxy implements ControlProperties {
 
     constructor(props?: ControlProperties) {
         if (props) {
-            this.initialValue = props.initialValue;
+            this.initialValue = props.value ?? props.initialValue;
             this.value = props.value ?? props.initialValue;
             this.items = props.items;
             this.min = props.min;
@@ -92,6 +92,7 @@ export class ControlConstructor extends BaseConstructor {
     
     public static fromJSON(d: Object & ControlConstructor): ControlConstructor {
         const control = new ControlConstructor(d.nodeId, d.name, d.type, d.props);
+        control.visible =  ref(d.visible);
         BaseConstructor.fromJSON(d, control);
         return control;
     }

@@ -112,7 +112,7 @@ export default {
 
         const nodeB = new PortIn();
         this.editor.addNode(nodeB);
-        nodeB.position(20, 600);
+        nodeB.position(20, 620);
 
         nodeB.setControlValue("Type", "BINARY");
 

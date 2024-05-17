@@ -10,9 +10,6 @@ export class PortOut extends NodeConstructor {
         this.type = "PortOut";
         this.code = '';
 
-        // this.addOption("Type", "SelectOption", "ANALOG", undefined, {
-        //     items: ['ANALOG', 'BINARY']
-        // });
         this.addControl("Type", "SelectInput", {
             initialValue: "ANALOG",
             items: ['ANALOG', 'BINARY'],
@@ -28,12 +25,10 @@ export class PortOut extends NodeConstructor {
             }
         });
 
-        // this.addOption("Address", "IntegerOption", 0, undefined, {min: 0, max: 256});
         this.addControl("Address", "IntegerInput", { initialValue: 0, min: 0, max: 256, label: "Address" });
-        this.addControl("Bit", "IntegerInput", { initialValue: 0, min: 0, max: 256, label: "Bit" });
+        this.addControl("Bit", "IntegerInput", { initialValue: 0, min: 0, max: 7, label: "Bit" });
         this.setControlVisibility("Bit", false);
 
-        // this.addInputInterface("In")
         this.addInput("In")
     }
 
@@ -59,6 +54,9 @@ export class PortOut extends NodeConstructor {
     }
 
     public static fromJSON(d: Object & PortOut): PortOut | undefined {
-        return NodeConstructor.fromJSON(d, new PortOut()) as PortOut;
+        const newNode = new PortOut();
+        NodeConstructor.fromJSON(d, newNode) as PortOut;
+
+        return newNode;
     }
 }

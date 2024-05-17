@@ -61,7 +61,8 @@ export default {
     methods: {
         valueChange(value) {
             if (this.$props.setValue) {
-                this.value = parseInt(String(value))
+                const numberStr = String(value).length ? String(value) : "0";
+                this.value = parseInt(numberStr)
                 this.$props.setValue(this.value);
                 (this.$refs.integerInput as VTextField).$forceUpdate();
             }

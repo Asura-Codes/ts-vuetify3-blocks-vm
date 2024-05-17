@@ -12,20 +12,16 @@ export class Maths extends NodeConstructor {
         this.code = '';
         this.noInputs = inputs;
         
-        // this.addOutputInterface("Out");
         this.addOutput("Out");
         
-        // this.addOption("Operation", "SelectOption", "+", undefined, {
-        //     items: ['+', '-', '*', '/']
-        // });        
         this.addControl("Operation", "SelectInput", {
             initialValue: "+",
             items: ['+', '-', '*', '/']
         });
 
-        for (let i = 1; i <= this.noInputs; i++) 
+        for (let i = 1; i <= this.noInputs; i++) { 
             this.addInput("In " + i.toString())
-            // this.addInputInterface("In " + i.toString())
+        }
     }
 
     calculate() {

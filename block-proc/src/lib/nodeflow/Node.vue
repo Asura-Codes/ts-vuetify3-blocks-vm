@@ -5,10 +5,11 @@ import Control, { ControlConstructor, ControlProperties } from './Control.vue'
 import { PropType, Ref, UnwrapRef, ref } from 'vue';
 import { ConnectionConstructor } from './Connection.vue';
 import { BaseConstructor, RootMap } from './definitions';
+import { fast_uuid } from './uuid';
 </script>
 
 <template>
-    <main class="nodeflow-node move-node" :style="translate" :data-id="id">
+    <main :key="reloadKey" class="nodeflow-node move-node" :style="translate" :data-id="id">
         <div class="move-node header" :data-id="id">
             <v-form density="compact">
                 <v-row justify="end" density="compact">
@@ -288,6 +289,7 @@ export class NodeConstructor extends BaseConstructor {
 
 export default {
     data: () => ({
+        reloadKey: fast_uuid(),
         menu: [
             { title: 'Edit..', icon: "mdi-tag-edit", action: "edit" },
             { title: 'Duplicate', icon: "mdi-content-duplicate", action: "duplicate" },
@@ -375,8 +377,10 @@ export default {
     },
     watch: {
         manufacturer: {
-            handler(cfg, _) {
-
+            handler(cfg, old) {
+                if (cfg !== old) {
+                    this.reloadKey = fast_uuid()
+                }
             },
             deep: true
         }
