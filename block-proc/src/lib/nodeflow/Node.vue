@@ -32,18 +32,18 @@ import { fast_uuid } from './uuid';
                         </v-sheet>
                     </v-col>
                     <v-col cols="6" v-if="!editing" class="move-node" :data-id="id">
-                        <v-sheet class="mx-auto" color="transparent">
+                        <v-sheet class="move-node" :data-id="id" color="transparent">
                             <v-label class="move-node" :data-id="id">{{ manufacturer.title }}</v-label>
                         </v-sheet>
                     </v-col>
                     <v-spacer v-if="!editing" class="move-node" :data-id="id" />
                     <v-col cols="6" v-else class="move-node" :data-id="id">
                         <v-sheet class="mx-auto" color="transparent">
-                            <v-text-field id="editName" class="header-text"  @keydown="handleKeydown($event)" autofocus single-line hide-details="auto"
+                            <v-text-field id="editName" class="header-text" @focusout="editing = false" @keydown="handleKeydown($event)" autofocus single-line hide-details="auto"
                                 v-model="manufacturer.title" min-width="180px" persistent-placeholder rounded="0"/>
                         </v-sheet>
                     </v-col>
-                    <v-col cols="3">
+                    <v-col cols="3" class="move-node" :data-id="id">
                         <v-sheet class="mx-auto" color="transparent">
                             <v-btn class="ms-2" icon="mdi-close" variant="text" density="compact"
                                 v-on:click="$emit('removeNode', manufacturer)" />

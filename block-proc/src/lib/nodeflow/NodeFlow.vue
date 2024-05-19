@@ -437,7 +437,8 @@ export default {
       return `transform-origin: 0px 0px; transform: scale(${this.scale.value}, ${this.scale.value}) translate(${this.translate.x}px, ${this.translate.y}px); min-width: ${this.format.width}px !important; height: ${this.format.height}px  !important;`
     },
     translateBackground() {
-      return `background-position: left ${this.translate.x}px top ${this.translate.y}px;`
+      const crate = this.scale.value * 100;
+      return `background-position: left ${this.scale.value * this.translate.x}px top ${this.scale.value * this.translate.y}px;background-size: ${crate}px ${crate}px, ${crate}px ${crate}px, ${crate/5}px ${crate/5}px, ${crate/5}px ${crate/5}px;`;
     },
   },
   created() {

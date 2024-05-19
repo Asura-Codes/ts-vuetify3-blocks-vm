@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { VTextField } from 'vuetify/lib/components/index.mjs';
-
-
 </script>
 
 <template>
     <main>
-        <v-text-field ref="numberInput" :label="label" v-model="value" @update:modelValue="valueChange" :rules="rules" hide-details
-            density="compact" />
+        <v-text-field ref="numberInput" :label="label" v-model="value" @update:modelValue="valueChange" :rules="rules"
+            hide-details density="compact" />
     </main>
 </template>
 
@@ -43,16 +41,26 @@ export default {
     methods: {
         valueChange(value) {
             if (this.$props.setValue) {
-                this.$props.setValue(parseFloat(String(value)));
+                const str = String(value);
+                const float = parseFloat(str);
+                this.$props.setValue(float);
             }
         },
     },
     computed: {
         rules() {
             return [
-                value => String(value) == String(parseFloat(String(value))),
-                value => parseInt(String(value)) >= this.min,
-                value => parseInt(String(value)) <= this.max,
+                value => {
+                    const str = String(value);
+                    const float = parseFloat(str);
+                    const strFloat = float.toLocaleString("fullwide", {
+                        useGrouping: false,
+                        maximumSignificantDigits: 20,
+                    });
+                    return str == strFloat;
+                },
+                value => parseFloat(String(value)) >= this.min,
+                value => parseFloat(String(value)) <= this.max,
             ]
         },
     }
