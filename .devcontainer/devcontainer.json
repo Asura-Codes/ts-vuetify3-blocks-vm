@@ -1,0 +1,22 @@
+{
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "dbaeumer.vscode-eslint",
+                "ms-vscode.vscode-typescript-next",
+                "webfreak.debug",
+                "spmeesseman.vscode-taskexplorer",
+                "platformio.platformio-ide",
+                "Vue.volar",
+                "ms-vscode.cpptools-extension-pack"
+            ]
+        }
+    },
+    "forwardPorts": [
+        3000
+    ]
+}

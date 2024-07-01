@@ -5,8 +5,8 @@
   "main": "dist",
   "scripts": {
     "start": "http-server dist",
-    "build": "powershell ./makeDebug.ps1",
-    "deploy": "powershell ./makeDeploy.ps1 && copyfiles -f -V dist/vm.wasm dist/vm.js compiler/compiler.ts ../block-proc/src/assets/.",
+    "build": "./scripts/makeDebug.sh",
+    "deploy": "powershell ./scripts/makeDeploy.sh && copyfiles -f -V dist/vm.wasm dist/vm.js compiler/compiler.ts ../block-proc/src/assets/.",
     "cbuild": "nearleyc compiler/compiler.ne -o compiler/compiler.ts",
     "ctest": "ts-node-dev tests/compiler.ts",
     "rtest": "ts-node-dev tests/execute.ts"

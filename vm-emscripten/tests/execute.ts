@@ -1,6 +1,9 @@
-import * as VM from '../dist/vm'
+import VM from '../dist/vm.js'
 import { readFileSync } from 'fs'
 
+global.createStdoutQ8YQPV9U = function(msg) {
+    console.log(msg)
+}
 
 VM().then(vm => {
     // const sum = vm.Add(5, 6);

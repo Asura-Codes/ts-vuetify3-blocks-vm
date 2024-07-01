@@ -1,5 +1,10 @@
 {
     "compilerOptions": {
         "target": "ES6",
+        "allowJs": true,
+        "checkJs": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "noEmit": true,
     }
 }

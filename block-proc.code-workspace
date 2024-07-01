@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "vm-emscripten"
+		},
+		{
+			"path": ".devcontainer"
 		}
 	],
 	"settings": {
